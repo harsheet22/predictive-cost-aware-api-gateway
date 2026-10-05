@@ -1,0 +1,12 @@
+{
+  "type": "image_resize",
+  "payloadSize": 8602,
+  "iterations": 6520,
+  "priority": "low",
+  "precision": "full",
+  "systemState": {
+    "cpuPct": 45,
+    "queueDepth": 2,
+    "concurrent": 3
+  }
+}

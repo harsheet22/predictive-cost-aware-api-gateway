@@ -1,0 +1,1118 @@
+{
+  "timestamp": "2026-10-05T08:41:57.713Z",
+  "seed": 42,
+  "profiles": [
+    {
+      "profile": "light",
+      "durationSec": 10,
+      "totalRequests": 78,
+      "seed": 42,
+      "baseline": {
+        "name": "baseline",
+        "uptimeMs": 11323,
+        "incoming": 78,
+        "processed": 78,
+        "rejected": 0,
+        "delayed": 0,
+        "downgraded": 0,
+        "allowed": 78,
+        "rateLimited": 0,
+        "shed": 0,
+        "errors": 0,
+        "slaMet": 78,
+        "inFlight": 0,
+        "rps": 6.2,
+        "cache": {
+          "hits": 0,
+          "misses": 0,
+          "hitRatio": 0
+        },
+        "latency": {
+          "count": 78,
+          "avg": 34.88,
+          "p50": 35,
+          "p90": 50,
+          "p95": 50,
+          "p99": 50,
+          "max": 48
+        },
+        "utilization": {
+          "cpuPct": 1.6,
+          "rssBytes": 59162624,
+          "avgConcurrency": 1.14,
+          "maxConcurrency": 2,
+          "queueDepth": 0,
+          "queueMax": 0
+        },
+        "cost": {
+          "estimatedCloudCostUsd": 0.000143427,
+          "predictedCloudCostUsd": 0,
+          "costPerSuccessUsd": 0.000001839
+        },
+        "prediction": {
+          "samples": 0,
+          "maeMs": 0,
+          "rmseMs": 0,
+          "mape": 0,
+          "r2": 0
+        }
+      },
+      "predictive": {
+        "name": "predictive",
+        "uptimeMs": 21943,
+        "incoming": 78,
+        "processed": 78,
+        "rejected": 0,
+        "delayed": 0,
+        "downgraded": 0,
+        "allowed": 78,
+        "rateLimited": 0,
+        "shed": 0,
+        "errors": 0,
+        "slaMet": 78,
+        "inFlight": 0,
+        "rps": 7.6,
+        "cache": {
+          "hits": 0,
+          "misses": 0,
+          "hitRatio": 0
+        },
+        "latency": {
+          "count": 78,
+          "avg": 35.4,
+          "p50": 35,
+          "p90": 50,
+          "p95": 50,
+          "p99": 50,
+          "max": 48
+        },
+        "utilization": {
+          "cpuPct": 3.1,
+          "rssBytes": 57892864,
+          "avgConcurrency": 1.23,
+          "maxConcurrency": 4,
+          "queueDepth": 0,
+          "queueMax": 0
+        },
+        "cost": {
+          "estimatedCloudCostUsd": 0.000144274,
+          "predictedCloudCostUsd": 0.000148861,
+          "costPerSuccessUsd": 0.00000185
+        },
+        "prediction": {
+          "samples": 78,
+          "maeMs": 3.286,
+          "rmseMs": 5.877,
+          "mape": 0.1355,
+          "r2": 0.5886
+        }
+      },
+      "savings": {
+        "absoluteUsd": -8.47e-7,
+        "percent": -0.6,
+        "slaMetDelta": 0,
+        "costPerSuccessDelta": 1.1e-8
+      },
+      "summary": {
+        "baseline": {
+          "processed": 78,
+          "rejected": 0,
+          "p95": 50,
+          "costUsd": 0.000143427,
+          "costPerSuccess": 0.000001839,
+          "slaMetRate": 1
+        },
+        "predictive": {
+          "processed": 78,
+          "rejected": 0,
+          "delayed": 0,
+          "downgraded": 0,
+          "p95": 50,
+          "costUsd": 0.000144274,
+          "costPerSuccess": 0.00000185,
+          "slaMetRate": 1,
+          "prediction": {
+            "samples": 78,
+            "maeMs": 3.286,
+            "rmseMs": 5.877,
+            "mape": 0.1355,
+            "r2": 0.5886
+          }
+        }
+      }
+    },
+    {
+      "profile": "normal",
+      "durationSec": 10,
+      "totalRequests": 246,
+      "seed": 42,
+      "baseline": {
+        "name": "baseline",
+        "uptimeMs": 14359,
+        "incoming": 246,
+        "processed": 246,
+        "rejected": 0,
+        "delayed": 0,
+        "downgraded": 0,
+        "allowed": 246,
+        "rateLimited": 0,
+        "shed": 0,
+        "errors": 0,
+        "slaMet": 246,
+        "inFlight": 0,
+        "rps": 18,
+        "cache": {
+          "hits": 0,
+          "misses": 0,
+          "hitRatio": 0
+        },
+        "latency": {
+          "count": 246,
+          "avg": 36.05,
+          "p50": 35,
+          "p90": 50,
+          "p95": 50,
+          "p99": 75,
+          "max": 61
+        },
+        "utilization": {
+          "cpuPct": 17.2,
+          "rssBytes": 59953152,
+          "avgConcurrency": 1.35,
+          "maxConcurrency": 3,
+          "queueDepth": 0,
+          "queueMax": 0
+        },
+        "cost": {
+          "estimatedCloudCostUsd": 0.000457689,
+          "predictedCloudCostUsd": 0,
+          "costPerSuccessUsd": 0.000001861
+        },
+        "prediction": {
+          "samples": 0,
+          "maeMs": 0,
+          "rmseMs": 0,
+          "mape": 0,
+          "r2": 0
+        }
+      },
+      "predictive": {
+        "name": "predictive",
+        "uptimeMs": 26338,
+        "incoming": 246,
+        "processed": 246,
+        "rejected": 0,
+        "delayed": 0,
+        "downgraded": 0,
+        "allowed": 246,
+        "rateLimited": 0,
+        "shed": 0,
+        "errors": 0,
+        "slaMet": 246,
+        "inFlight": 0,
+        "rps": 20.6,
+        "cache": {
+          "hits": 0,
+          "misses": 0,
+          "hitRatio": 0
+        },
+        "latency": {
+          "count": 246,
+          "avg": 36.89,
+          "p50": 35,
+          "p90": 50,
+          "p95": 75,
+          "p99": 75,
+          "max": 76
+        },
+        "utilization": {
+          "cpuPct": 20.2,
+          "rssBytes": 62189568,
+          "avgConcurrency": 1.62,
+          "maxConcurrency": 4,
+          "queueDepth": 0,
+          "queueMax": 0
+        },
+        "cost": {
+          "estimatedCloudCostUsd": 0.000461466,
+          "predictedCloudCostUsd": 0.000467099,
+          "costPerSuccessUsd": 0.000001876
+        },
+        "prediction": {
+          "samples": 246,
+          "maeMs": 5.233,
+          "rmseMs": 8.042,
+          "mape": 0.1696,
+          "r2": 0.4153
+        }
+      },
+      "savings": {
+        "absoluteUsd": -0.000003777,
+        "percent": -0.8,
+        "slaMetDelta": 0,
+        "costPerSuccessDelta": 1.5e-8
+      },
+      "summary": {
+        "baseline": {
+          "processed": 246,
+          "rejected": 0,
+          "p95": 50,
+          "costUsd": 0.000457689,
+          "costPerSuccess": 0.000001861,
+          "slaMetRate": 1
+        },
+        "predictive": {
+          "processed": 246,
+          "rejected": 0,
+          "delayed": 0,
+          "downgraded": 0,
+          "p95": 75,
+          "costUsd": 0.000461466,
+          "costPerSuccess": 0.000001876,
+          "slaMetRate": 1,
+          "prediction": {
+            "samples": 246,
+            "maeMs": 5.233,
+            "rmseMs": 8.042,
+            "mape": 0.1696,
+            "r2": 0.4153
+          }
+        }
+      }
+    },
+    {
+      "profile": "mixed",
+      "durationSec": 10,
+      "totalRequests": 417,
+      "seed": 42,
+      "baseline": {
+        "name": "baseline",
+        "uptimeMs": 17425,
+        "incoming": 417,
+        "processed": 417,
+        "rejected": 0,
+        "delayed": 0,
+        "downgraded": 0,
+        "allowed": 417,
+        "rateLimited": 0,
+        "shed": 0,
+        "errors": 0,
+        "slaMet": 417,
+        "inFlight": 0,
+        "rps": 26.6,
+        "cache": {
+          "hits": 0,
+          "misses": 0,
+          "hitRatio": 0
+        },
+        "latency": {
+          "count": 417,
+          "avg": 36.34,
+          "p50": 35,
+          "p90": 50,
+          "p95": 75,
+          "p99": 75,
+          "max": 69
+        },
+        "utilization": {
+          "cpuPct": 16.9,
+          "rssBytes": 74067968,
+          "avgConcurrency": 1.53,
+          "maxConcurrency": 4,
+          "queueDepth": 0,
+          "queueMax": 0
+        },
+        "cost": {
+          "estimatedCloudCostUsd": 0.000780305,
+          "predictedCloudCostUsd": 0,
+          "costPerSuccessUsd": 0.000001871
+        },
+        "prediction": {
+          "samples": 0,
+          "maeMs": 0,
+          "rmseMs": 0,
+          "mape": 0,
+          "r2": 0
+        }
+      },
+      "predictive": {
+        "name": "predictive",
+        "uptimeMs": 30548,
+        "incoming": 417,
+        "processed": 417,
+        "rejected": 0,
+        "delayed": 0,
+        "downgraded": 0,
+        "allowed": 417,
+        "rateLimited": 0,
+        "shed": 0,
+        "errors": 0,
+        "slaMet": 417,
+        "inFlight": 0,
+        "rps": 34,
+        "cache": {
+          "hits": 0,
+          "misses": 0,
+          "hitRatio": 0
+        },
+        "latency": {
+          "count": 417,
+          "avg": 36.5,
+          "p50": 35,
+          "p90": 75,
+          "p95": 75,
+          "p99": 75,
+          "max": 76
+        },
+        "utilization": {
+          "cpuPct": 50,
+          "rssBytes": 73273344,
+          "avgConcurrency": 1.91,
+          "maxConcurrency": 4,
+          "queueDepth": 0,
+          "queueMax": 0
+        },
+        "cost": {
+          "estimatedCloudCostUsd": 0.00077866,
+          "predictedCloudCostUsd": 0.000789583,
+          "costPerSuccessUsd": 0.000001867
+        },
+        "prediction": {
+          "samples": 417,
+          "maeMs": 6.172,
+          "rmseMs": 8.382,
+          "mape": 0.2174,
+          "r2": 0.5692
+        }
+      },
+      "savings": {
+        "absoluteUsd": 0.000001645,
+        "percent": 0.2,
+        "slaMetDelta": 0,
+        "costPerSuccessDelta": -4e-9
+      },
+      "summary": {
+        "baseline": {
+          "processed": 417,
+          "rejected": 0,
+          "p95": 75,
+          "costUsd": 0.000780305,
+          "costPerSuccess": 0.000001871,
+          "slaMetRate": 1
+        },
+        "predictive": {
+          "processed": 417,
+          "rejected": 0,
+          "delayed": 0,
+          "downgraded": 0,
+          "p95": 75,
+          "costUsd": 0.00077866,
+          "costPerSuccess": 0.000001867,
+          "slaMetRate": 1,
+          "prediction": {
+            "samples": 417,
+            "maeMs": 6.172,
+            "rmseMs": 8.382,
+            "mape": 0.2174,
+            "r2": 0.5692
+          }
+        }
+      }
+    },
+    {
+      "profile": "burst",
+      "durationSec": 5,
+      "totalRequests": 417,
+      "seed": 42,
+      "baseline": {
+        "name": "baseline",
+        "uptimeMs": 12235,
+        "incoming": 417,
+        "processed": 417,
+        "rejected": 0,
+        "delayed": 0,
+        "downgraded": 0,
+        "allowed": 417,
+        "rateLimited": 0,
+        "shed": 0,
+        "errors": 0,
+        "slaMet": 417,
+        "inFlight": 0,
+        "rps": 35.8,
+        "cache": {
+          "hits": 0,
+          "misses": 0,
+          "hitRatio": 0
+        },
+        "latency": {
+          "count": 417,
+          "avg": 36.46,
+          "p50": 35,
+          "p90": 75,
+          "p95": 75,
+          "p99": 75,
+          "max": 81
+        },
+        "utilization": {
+          "cpuPct": 52.7,
+          "rssBytes": 73515008,
+          "avgConcurrency": 1.82,
+          "maxConcurrency": 4,
+          "queueDepth": 0,
+          "queueMax": 0
+        },
+        "cost": {
+          "estimatedCloudCostUsd": 0.000781692,
+          "predictedCloudCostUsd": 0,
+          "costPerSuccessUsd": 0.000001875
+        },
+        "prediction": {
+          "samples": 0,
+          "maeMs": 0,
+          "rmseMs": 0,
+          "mape": 0,
+          "r2": 0
+        }
+      },
+      "predictive": {
+        "name": "predictive",
+        "uptimeMs": 20984,
+        "incoming": 417,
+        "processed": 417,
+        "rejected": 0,
+        "delayed": 0,
+        "downgraded": 0,
+        "allowed": 417,
+        "rateLimited": 0,
+        "shed": 0,
+        "errors": 0,
+        "slaMet": 417,
+        "inFlight": 0,
+        "rps": 49.8,
+        "cache": {
+          "hits": 0,
+          "misses": 0,
+          "hitRatio": 0
+        },
+        "latency": {
+          "count": 417,
+          "avg": 38.91,
+          "p50": 50,
+          "p90": 75,
+          "p95": 75,
+          "p99": 100,
+          "max": 89
+        },
+        "utilization": {
+          "cpuPct": 58.2,
+          "rssBytes": 72396800,
+          "avgConcurrency": 2.35,
+          "maxConcurrency": 6,
+          "queueDepth": 0,
+          "queueMax": 0
+        },
+        "cost": {
+          "estimatedCloudCostUsd": 0.000801222,
+          "predictedCloudCostUsd": 0.000782672,
+          "costPerSuccessUsd": 0.000001921
+        },
+        "prediction": {
+          "samples": 417,
+          "maeMs": 7.572,
+          "rmseMs": 10.222,
+          "mape": 0.216,
+          "r2": 0.464
+        }
+      },
+      "savings": {
+        "absoluteUsd": -0.00001953,
+        "percent": -2.5,
+        "slaMetDelta": 0,
+        "costPerSuccessDelta": 4.6e-8
+      },
+      "summary": {
+        "baseline": {
+          "processed": 417,
+          "rejected": 0,
+          "p95": 75,
+          "costUsd": 0.000781692,
+          "costPerSuccess": 0.000001875,
+          "slaMetRate": 1
+        },
+        "predictive": {
+          "processed": 417,
+          "rejected": 0,
+          "delayed": 0,
+          "downgraded": 0,
+          "p95": 75,
+          "costUsd": 0.000801222,
+          "costPerSuccess": 0.000001921,
+          "slaMetRate": 1,
+          "prediction": {
+            "samples": 417,
+            "maeMs": 7.572,
+            "rmseMs": 10.222,
+            "mape": 0.216,
+            "r2": 0.464
+          }
+        }
+      }
+    },
+    {
+      "profile": "heavy_tail",
+      "durationSec": 10,
+      "totalRequests": 449,
+      "seed": 42,
+      "baseline": {
+        "name": "baseline",
+        "uptimeMs": 18886,
+        "incoming": 449,
+        "processed": 449,
+        "rejected": 0,
+        "delayed": 0,
+        "downgraded": 0,
+        "allowed": 449,
+        "rateLimited": 0,
+        "shed": 0,
+        "errors": 0,
+        "slaMet": 449,
+        "inFlight": 0,
+        "rps": 23.8,
+        "cache": {
+          "hits": 0,
+          "misses": 0,
+          "hitRatio": 0
+        },
+        "latency": {
+          "count": 449,
+          "avg": 37.31,
+          "p50": 50,
+          "p90": 75,
+          "p95": 75,
+          "p99": 75,
+          "max": 73
+        },
+        "utilization": {
+          "cpuPct": 15.6,
+          "rssBytes": 89247744,
+          "avgConcurrency": 1.52,
+          "maxConcurrency": 4,
+          "queueDepth": 0,
+          "queueMax": 0
+        },
+        "cost": {
+          "estimatedCloudCostUsd": 0.000851249,
+          "predictedCloudCostUsd": 0,
+          "costPerSuccessUsd": 0.000001896
+        },
+        "prediction": {
+          "samples": 0,
+          "maeMs": 0,
+          "rmseMs": 0,
+          "mape": 0,
+          "r2": 0
+        }
+      },
+      "predictive": {
+        "name": "predictive",
+        "uptimeMs": 33952,
+        "incoming": 449,
+        "processed": 449,
+        "rejected": 0,
+        "delayed": 0,
+        "downgraded": 0,
+        "allowed": 449,
+        "rateLimited": 0,
+        "shed": 0,
+        "errors": 0,
+        "slaMet": 449,
+        "inFlight": 0,
+        "rps": 29.8,
+        "cache": {
+          "hits": 0,
+          "misses": 0,
+          "hitRatio": 0
+        },
+        "latency": {
+          "count": 449,
+          "avg": 43.7,
+          "p50": 50,
+          "p90": 75,
+          "p95": 100,
+          "p99": 100,
+          "max": 117
+        },
+        "utilization": {
+          "cpuPct": 37,
+          "rssBytes": 91099136,
+          "avgConcurrency": 1.94,
+          "maxConcurrency": 4,
+          "queueDepth": 0,
+          "queueMax": 0
+        },
+        "cost": {
+          "estimatedCloudCostUsd": 0.000918012,
+          "predictedCloudCostUsd": 0.000873767,
+          "costPerSuccessUsd": 0.000002045
+        },
+        "prediction": {
+          "samples": 449,
+          "maeMs": 9.839,
+          "rmseMs": 14.001,
+          "mape": 0.2311,
+          "r2": 0.4044
+        }
+      },
+      "savings": {
+        "absoluteUsd": -0.000066763,
+        "percent": -7.8,
+        "slaMetDelta": 0,
+        "costPerSuccessDelta": 1.49e-7
+      },
+      "summary": {
+        "baseline": {
+          "processed": 449,
+          "rejected": 0,
+          "p95": 75,
+          "costUsd": 0.000851249,
+          "costPerSuccess": 0.000001896,
+          "slaMetRate": 1
+        },
+        "predictive": {
+          "processed": 449,
+          "rejected": 0,
+          "delayed": 0,
+          "downgraded": 0,
+          "p95": 100,
+          "costUsd": 0.000918012,
+          "costPerSuccess": 0.000002045,
+          "slaMetRate": 1,
+          "prediction": {
+            "samples": 449,
+            "maeMs": 9.839,
+            "rmseMs": 14.001,
+            "mape": 0.2311,
+            "r2": 0.4044
+          }
+        }
+      }
+    },
+    {
+      "profile": "stress",
+      "durationSec": 3,
+      "totalRequests": 588,
+      "seed": 42,
+      "baseline": {
+        "name": "baseline",
+        "uptimeMs": 13713,
+        "incoming": 588,
+        "processed": 588,
+        "rejected": 0,
+        "delayed": 0,
+        "downgraded": 0,
+        "allowed": 588,
+        "rateLimited": 0,
+        "shed": 0,
+        "errors": 0,
+        "slaMet": 588,
+        "inFlight": 0,
+        "rps": 43.6,
+        "cache": {
+          "hits": 0,
+          "misses": 0,
+          "hitRatio": 0
+        },
+        "latency": {
+          "count": 588,
+          "avg": 38.49,
+          "p50": 50,
+          "p90": 75,
+          "p95": 75,
+          "p99": 100,
+          "max": 82
+        },
+        "utilization": {
+          "cpuPct": 48.2,
+          "rssBytes": 95281152,
+          "avgConcurrency": 2.06,
+          "maxConcurrency": 4,
+          "queueDepth": 0,
+          "queueMax": 0
+        },
+        "cost": {
+          "estimatedCloudCostUsd": 0.001124672,
+          "predictedCloudCostUsd": 0,
+          "costPerSuccessUsd": 0.000001913
+        },
+        "prediction": {
+          "samples": 0,
+          "maeMs": 0,
+          "rmseMs": 0,
+          "mape": 0,
+          "r2": 0
+        }
+      },
+      "predictive": {
+        "name": "predictive",
+        "uptimeMs": 23649,
+        "incoming": 588,
+        "processed": 475,
+        "rejected": 113,
+        "delayed": 0,
+        "downgraded": 1,
+        "allowed": 474,
+        "rateLimited": 113,
+        "shed": 0,
+        "errors": 0,
+        "slaMet": 475,
+        "inFlight": 0,
+        "rps": 62,
+        "cache": {
+          "hits": 0,
+          "misses": 1,
+          "hitRatio": 0
+        },
+        "latency": {
+          "count": 588,
+          "avg": 38.65,
+          "p50": 50,
+          "p90": 75,
+          "p95": 100,
+          "p99": 100,
+          "max": 111
+        },
+        "utilization": {
+          "cpuPct": 0,
+          "rssBytes": 77619200,
+          "avgConcurrency": 2.6,
+          "maxConcurrency": 6,
+          "queueDepth": 0,
+          "queueMax": 0
+        },
+        "cost": {
+          "estimatedCloudCostUsd": 0.001001593,
+          "predictedCloudCostUsd": 0.00115161,
+          "costPerSuccessUsd": 0.000002109
+        },
+        "prediction": {
+          "samples": 475,
+          "maeMs": 10.895,
+          "rmseMs": 14.905,
+          "mape": 0.2336,
+          "r2": 0.2924
+        }
+      },
+      "savings": {
+        "absoluteUsd": 0.000123079,
+        "percent": 10.9,
+        "slaMetDelta": -113,
+        "costPerSuccessDelta": 1.96e-7
+      },
+      "summary": {
+        "baseline": {
+          "processed": 588,
+          "rejected": 0,
+          "p95": 75,
+          "costUsd": 0.001124672,
+          "costPerSuccess": 0.000001913,
+          "slaMetRate": 1
+        },
+        "predictive": {
+          "processed": 475,
+          "rejected": 113,
+          "delayed": 0,
+          "downgraded": 1,
+          "p95": 100,
+          "costUsd": 0.001001593,
+          "costPerSuccess": 0.000002109,
+          "slaMetRate": 1,
+          "prediction": {
+            "samples": 475,
+            "maeMs": 10.895,
+            "rmseMs": 14.905,
+            "mape": 0.2336,
+            "r2": 0.2924
+          }
+        }
+      }
+    },
+    {
+      "profile": "overload",
+      "durationSec": 2,
+      "totalRequests": 988,
+      "seed": 42,
+      "baseline": {
+        "name": "baseline",
+        "uptimeMs": 20214,
+        "incoming": 988,
+        "processed": 988,
+        "rejected": 0,
+        "delayed": 0,
+        "downgraded": 0,
+        "allowed": 988,
+        "rateLimited": 0,
+        "shed": 0,
+        "errors": 0,
+        "slaMet": 988,
+        "inFlight": 0,
+        "rps": 49.2,
+        "cache": {
+          "hits": 0,
+          "misses": 0,
+          "hitRatio": 0
+        },
+        "latency": {
+          "count": 988,
+          "avg": 47.83,
+          "p50": 50,
+          "p90": 75,
+          "p95": 100,
+          "p99": 100,
+          "max": 124
+        },
+        "utilization": {
+          "cpuPct": 51.7,
+          "rssBytes": 94007296,
+          "avgConcurrency": 2.65,
+          "maxConcurrency": 6,
+          "queueDepth": 0,
+          "queueMax": 0
+        },
+        "cost": {
+          "estimatedCloudCostUsd": 0.002132942,
+          "predictedCloudCostUsd": 0,
+          "costPerSuccessUsd": 0.000002159
+        },
+        "prediction": {
+          "samples": 0,
+          "maeMs": 0,
+          "rmseMs": 0,
+          "mape": 0,
+          "r2": 0
+        }
+      },
+      "predictive": {
+        "name": "predictive",
+        "uptimeMs": 35954,
+        "incoming": 988,
+        "processed": 744,
+        "rejected": 244,
+        "delayed": 0,
+        "downgraded": 70,
+        "allowed": 674,
+        "rateLimited": 244,
+        "shed": 0,
+        "errors": 0,
+        "slaMet": 744,
+        "inFlight": 0,
+        "rps": 69.6,
+        "cache": {
+          "hits": 24,
+          "misses": 46,
+          "hitRatio": 0.343
+        },
+        "latency": {
+          "count": 988,
+          "avg": 42.05,
+          "p50": 50,
+          "p90": 100,
+          "p95": 100,
+          "p99": 150,
+          "max": 150
+        },
+        "utilization": {
+          "cpuPct": 89.9,
+          "rssBytes": 93970432,
+          "avgConcurrency": 2.76,
+          "maxConcurrency": 8,
+          "queueDepth": 0,
+          "queueMax": 0
+        },
+        "cost": {
+          "estimatedCloudCostUsd": 0.001711399,
+          "predictedCloudCostUsd": 0.002125374,
+          "costPerSuccessUsd": 0.0000023
+        },
+        "prediction": {
+          "samples": 744,
+          "maeMs": 17.446,
+          "rmseMs": 23.237,
+          "mape": 0.4437,
+          "r2": 0.0779
+        }
+      },
+      "savings": {
+        "absoluteUsd": 0.000421543,
+        "percent": 19.8,
+        "slaMetDelta": -244,
+        "costPerSuccessDelta": 1.41e-7
+      },
+      "summary": {
+        "baseline": {
+          "processed": 988,
+          "rejected": 0,
+          "p95": 100,
+          "costUsd": 0.002132942,
+          "costPerSuccess": 0.000002159,
+          "slaMetRate": 1
+        },
+        "predictive": {
+          "processed": 744,
+          "rejected": 244,
+          "delayed": 0,
+          "downgraded": 70,
+          "p95": 100,
+          "costUsd": 0.001711399,
+          "costPerSuccess": 0.0000023,
+          "slaMetRate": 1,
+          "prediction": {
+            "samples": 744,
+            "maeMs": 17.446,
+            "rmseMs": 23.237,
+            "mape": 0.4437,
+            "r2": 0.0779
+          }
+        }
+      }
+    },
+    {
+      "profile": "demo",
+      "durationSec": 5,
+      "totalRequests": 588,
+      "seed": 42,
+      "baseline": {
+        "name": "baseline",
+        "uptimeMs": 15159,
+        "incoming": 588,
+        "processed": 588,
+        "rejected": 0,
+        "delayed": 0,
+        "downgraded": 0,
+        "allowed": 588,
+        "rateLimited": 0,
+        "shed": 0,
+        "errors": 0,
+        "slaMet": 588,
+        "inFlight": 0,
+        "rps": 39.6,
+        "cache": {
+          "hits": 0,
+          "misses": 0,
+          "hitRatio": 0
+        },
+        "latency": {
+          "count": 588,
+          "avg": 37.24,
+          "p50": 50,
+          "p90": 75,
+          "p95": 75,
+          "p99": 75,
+          "max": 80
+        },
+        "utilization": {
+          "cpuPct": 35.5,
+          "rssBytes": 95440896,
+          "avgConcurrency": 1.93,
+          "maxConcurrency": 4,
+          "queueDepth": 0,
+          "queueMax": 0
+        },
+        "cost": {
+          "estimatedCloudCostUsd": 0.001106247,
+          "predictedCloudCostUsd": 0,
+          "costPerSuccessUsd": 0.000001881
+        },
+        "prediction": {
+          "samples": 0,
+          "maeMs": 0,
+          "rmseMs": 0,
+          "mape": 0,
+          "r2": 0
+        }
+      },
+      "predictive": {
+        "name": "predictive",
+        "uptimeMs": 26521,
+        "incoming": 588,
+        "processed": 554,
+        "rejected": 34,
+        "delayed": 0,
+        "downgraded": 16,
+        "allowed": 538,
+        "rateLimited": 34,
+        "shed": 0,
+        "errors": 0,
+        "slaMet": 554,
+        "inFlight": 0,
+        "rps": 56.2,
+        "cache": {
+          "hits": 1,
+          "misses": 15,
+          "hitRatio": 0.063
+        },
+        "latency": {
+          "count": 588,
+          "avg": 40.19,
+          "p50": 50,
+          "p90": 75,
+          "p95": 75,
+          "p99": 100,
+          "max": 111
+        },
+        "utilization": {
+          "cpuPct": 13.8,
+          "rssBytes": 95571968,
+          "avgConcurrency": 2.45,
+          "maxConcurrency": 5,
+          "queueDepth": 0,
+          "queueMax": 0
+        },
+        "cost": {
+          "estimatedCloudCostUsd": 0.001103128,
+          "predictedCloudCostUsd": 0.001220213,
+          "costPerSuccessUsd": 0.000001991
+        },
+        "prediction": {
+          "samples": 554,
+          "maeMs": 10.628,
+          "rmseMs": 13.48,
+          "mape": 0.3362,
+          "r2": 0.3865
+        }
+      },
+      "savings": {
+        "absoluteUsd": 0.000003119,
+        "percent": 0.3,
+        "slaMetDelta": -34,
+        "costPerSuccessDelta": 1.1e-7
+      },
+      "summary": {
+        "baseline": {
+          "processed": 588,
+          "rejected": 0,
+          "p95": 75,
+          "costUsd": 0.001106247,
+          "costPerSuccess": 0.000001881,
+          "slaMetRate": 1
+        },
+        "predictive": {
+          "processed": 554,
+          "rejected": 34,
+          "delayed": 0,
+          "downgraded": 16,
+          "p95": 75,
+          "costUsd": 0.001103128,
+          "costPerSuccess": 0.000001991,
+          "slaMetRate": 1,
+          "prediction": {
+            "samples": 554,
+            "maeMs": 10.628,
+            "rmseMs": 13.48,
+            "mape": 0.3362,
+            "r2": 0.3865
+          }
+        }
+      }
+    }
+  ]
+}

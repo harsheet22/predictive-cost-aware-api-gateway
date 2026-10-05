@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://predictive-gateway.local/schemas/request.schema.json",
+  "title": "GatewayRequest",
+  "description": "A single unit of incoming work submitted to a gateway. Identical objects are replayed through both gateways for a fair comparison.",
+  "type": "object",
+  "required": ["requestId", "type", "payloadSize", "priority", "precision", "parameters", "clientId", "arrivalTs"],
+  "additionalProperties": false,
+  "properties": {
+    "requestId": {
+      "type": "string",
+      "description": "Unique id (uuid v4 in the simulator)."
+    },
+    "type": {
+      "type": "string",
+      "enum": ["image_resize", "hash_compute", "db_query", "report_generate", "ml_inference"],
+      "description": "Job type; drives the executor and the ML feature vector."
+    },
+    "payloadSize": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Request/payload size in bytes. Contributes to transfer cost and some CPU cost."
+    },
+    "priority": {
+      "type": "string",
+      "enum": ["low", "normal", "high"]
+    },
+    "precision": {
+      "type": "string",
+      "enum": ["full", "reduced"],
+      "description": "full = real work; reduced = downgraded variant (less CPU/IO)."
+    },
+    "parameters": {
+      "type": "object",
+      "description": "Type-specific parameters.",
+      "properties": {
+        "iterations": { "type": "integer", "minimum": 0 },
+        "itemId": { "type": "integer", "minimum": 0, "description": "Catalogue key for cache-friendly reads." }
+      },
+      "additionalProperties": true
+    },
+    "clientId": {
+      "type": "string"
+    },
+    "arrivalTs": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Scheduled arrival timestamp produced by the simulator."
+    }
+  }
+}

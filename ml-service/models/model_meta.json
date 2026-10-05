@@ -1,0 +1,53 @@
+{
+  "modelVersion": "random_forest-v20261005213026",
+  "modelType": "random_forest",
+  "trainedAt": "2026-10-05T21:30:26.484958",
+  "featureColumns": [
+    "type_encoded",
+    "iterations",
+    "type_x_iter",
+    "type_x_payload",
+    "iterations_k",
+    "payload_kb",
+    "payloadSize",
+    "priority_encoded",
+    "precision_encoded",
+    "ioMs"
+  ],
+  "trainMetrics": {
+    "mae": 0.5070715390589954,
+    "rmse": 0.657186564418461,
+    "r2": 0.9966396061743569
+  },
+  "testMetrics": {
+    "mae": 0.805879570268774,
+    "rmse": 1.1638768492454576,
+    "r2": 0.9887880347958732
+  },
+  "featureImportance": {
+    "type_encoded": 0.0019189529656278865,
+    "iterations": 0.007374183446229558,
+    "type_x_iter": 0.01215418400851012,
+    "type_x_payload": 0.008588195453861887,
+    "iterations_k": 0.008685970750248724,
+    "payload_kb": 0.012535197477045434,
+    "payloadSize": 0.01284804083140515,
+    "priority_encoded": 0.0005987819838695383,
+    "precision_encoded": 0.0,
+    "ioMs": 0.9352964930832017
+  },
+  "hyperparameters": {
+    "test_split": 0.2,
+    "random_state": 42,
+    "n_estimators": 100,
+    "max_depth": 10
+  },
+  "dataStats": {
+    "n_samples": 2000,
+    "n_train": 1600,
+    "n_test": 400,
+    "target_min": 11.793,
+    "target_max": 61.366,
+    "target_mean": 25.460328
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://predictive-gateway.local/schemas/result.schema.json",
+  "title": "ExecutionResult",
+  "description": "Outcome of a request after the gateway has decided and the executor has (or has not) run it.",
+  "type": "object",
+  "required": ["requestId", "decision", "status", "actualCostMs", "actualCloudCostUsd", "latencyMs", "slaMet"],
+  "additionalProperties": false,
+  "properties": {
+    "requestId": { "type": "string" },
+    "decision": {
+      "type": "string",
+      "enum": ["ALLOW", "DELAY", "DOWNGRADE", "REJECT"]
+    },
+    "status": {
+      "type": "integer",
+      "description": "HTTP-style status: 200 processed, 429 rate-limited, 503 shed, 500 error."
+    },
+    "actualCostMs": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Measured execution cost (CPU + I/O) in ms; 0 if rejected."
+    },
+    "actualCloudCostUsd": {
+      "type": "number",
+      "minimum": 0
+    },
+    "latencyMs": {
+      "type": "number",
+      "minimum": 0,
+      "description": "End-to-end time observed by the client, including any delay."
+    },
+    "slaMet": {
+      "type": "boolean",
+      "description": "status == 200 and latencyMs <= SLA target."
+    },
+    "predictedCostMs": {
+      "type": "number",
+      "minimum": 0
+    },
+    "error": { "type": "string" }
+  }
+}

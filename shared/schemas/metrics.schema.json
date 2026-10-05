@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://predictive-gateway.local/schemas/metrics.schema.json",
+  "title": "MetricsSnapshot",
+  "description": "Aggregated comparison metrics for one gateway, polled by the dashboard.",
+  "type": "object",
+  "required": ["name", "incoming", "processed", "rejected", "delayed", "downgraded", "rps", "latency", "utilization", "cost"],
+  "additionalProperties": true,
+  "properties": {
+    "name": { "type": "string", "enum": ["baseline", "predictive"] },
+    "uptimeMs": { "type": "number" },
+    "incoming": { "type": "integer", "description": "Requests that entered the gateway." },
+    "processed": { "type": "integer", "description": "Requests executed with status 200." },
+    "rejected": { "type": "integer", "description": "Status 429 + 503, not executed." },
+    "delayed": { "type": "integer", "description": "Admitted after waiting (predictive only)." },
+    "downgraded": { "type": "integer", "description": "Served via reduced/cheaper variant." },
+    "rateLimited": { "type": "integer" },
+    "shed": { "type": "integer" },
+    "errors": { "type": "integer" },
+    "slaMet": { "type": "integer" },
+    "inFlight": { "type": "integer" },
+    "rps": { "type": "number" },
+    "cache": {
+      "type": "object",
+      "properties": {
+        "hits": { "type": "integer" },
+        "misses": { "type": "integer" },
+        "hitRatio": { "type": "number" }
+      }
+    },
+    "latency": {
+      "type": "object",
+      "properties": {
+        "count": { "type": "integer" },
+        "avg": { "type": "number" },
+        "p50": { "type": "number" },
+        "p90": { "type": "number" },
+        "p95": { "type": "number" },
+        "p99": { "type": "number" },
+        "max": { "type": "number" }
+      }
+    },
+    "utilization": {
+      "type": "object",
+      "properties": {
+        "cpuPct": { "type": "number" },
+        "rssBytes": { "type": "integer" },
+        "avgConcurrency": { "type": "number" },
+        "maxConcurrency": { "type": "integer" },
+        "queueDepth": { "type": "integer" },
+        "queueMax": { "type": "integer" }
+      }
+    },
+    "cost": {
+      "type": "object",
+      "properties": {
+        "estimatedCloudCostUsd": { "type": "number" },
+        "costPerSuccessUsd": { "type": "number" },
+        "totalAwaitingMs": { "type": "number" }
+      }
+    },
+    "prediction": {
+      "type": "object",
+      "description": "Predicted-vs-actual accuracy (predictive only).",
+      "properties": {
+        "samples": { "type": "integer" },
+        "maeMs": { "type": "number" },
+        "rmseMs": { "type": "number" },
+        "mape": { "type": "number" },
+        "r2": { "type": "number" }
+      }
+    }
+  }
+}

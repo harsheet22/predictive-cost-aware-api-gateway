@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://predictive-gateway.local/schemas/decision.schema.json",
+  "title": "GatewayDecision",
+  "description": "The admission decision taken for a request before execution. The baseline gateway only ever emits ALLOW or REJECT; the predictive gateway can also DELAY and DOWNGRADE.",
+  "type": "object",
+  "required": ["requestId", "decision", "reason", "predictedCostMs", "budgetRemainingUsd"],
+  "additionalProperties": false,
+  "properties": {
+    "requestId": { "type": "string" },
+    "decision": {
+      "type": "string",
+      "enum": ["ALLOW", "DELAY", "DOWNGRADE", "REJECT"]
+    },
+    "reason": {
+      "type": "string",
+      "description": "Machine-readable explanation, e.g. 'cheap_and_budget_ok', 'budget_exceeded', 'queue_full', 'rate_limited'."
+    },
+    "predictedCostMs": {
+      "type": "number",
+      "minimum": 0,
+      "description": "0 when the gateway is cost-blind (baseline) or used a heuristic."
+    },
+    "budgetRemainingUsd": {
+      "type": "number"
+    },
+    "delayMs": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Set when decision = DELAY."
+    },
+    "downgradeTo": {
+      "type": "string",
+      "enum": ["full", "reduced"],
+      "description": "Set when decision = DOWNGRADE."
+    }
+  }
+}

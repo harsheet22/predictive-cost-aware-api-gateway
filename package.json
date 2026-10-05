@@ -1,0 +1,31 @@
+{
+  "name": "predictive-cost-aware-gateway",
+  "version": "0.1.0",
+  "description": "Predictive Cost-Aware API Gateway for Intelligent Cloud Resource Optimization: a local, zero-cost comparison of a traditional baseline gateway vs a predictive gateway that estimates request cost and decides ALLOW/DELAY/DOWNGRADE/REJECT.",
+  "main": "backend/src/index.js",
+  "scripts": {
+    "start": "node backend/src/index.js",
+    "demo": "node backend/scripts/demo.js",
+    "calibrate": "node backend/scripts/calibrate.js",
+    "test": "jest --testPathPatterns=backend/test --verbose",
+    "test:watch": "jest --testPathPatterns=backend/test --watch"
+  },
+  "keywords": [
+    "api-gateway",
+    "cost-optimization",
+    "load-shedding",
+    "machine-learning",
+    "cloud-architecture"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "jest": "^30.5.2"
+  }
+}
