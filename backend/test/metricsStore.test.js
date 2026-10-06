@@ -231,4 +231,56 @@ describe('MetricsStore', () => {
       expect(snapshot.experimentThroughput.processedPerSec).toBe(100);
     });
   });
+
+  test('records actual final reasons separately without changing decision or accuracy totals', () => {
+    for (const reason of ['cheap_and_budget_ok', 'high_priority_budget_ok', 'cheap_and_budget_ok']) {
+      metrics.begin();
+      metrics.record({ decision: 'ALLOW', reason, status: 200, latencyMs: 300,
+        slaMet: false, predictedCostMs: 20, actualCostMs: 30 });
+    }
+    expect(metrics.snapshot()).toMatchObject({ allowed: 3, processed: 3, slaMet: 0,
+      latency: { avg: 300 }, prediction: { samples: 3, maeMs: 10, rmseMs: 10 },
+      decisionReasons: [
+        { decision: 'ALLOW', reason: 'cheap_and_budget_ok', count: 2 },
+        { decision: 'ALLOW', reason: 'high_priority_budget_ok', count: 1 },
+      ] });
+    metrics.reset();
+    expect(metrics.snapshot().decisionReasons).toEqual([]);
+  });
+
+  test('retains real timestamped phase costs, including final totals, until reset', () => {
+    metrics.markExperimentStart(5);
+    metrics.begin();
+    metrics.record({ decision: 'ALLOW', status: 200, latencyMs: 10, slaMet: true,
+      actualCostUsd: 0.000002, predictedCostUsd: 0.000001 });
+    jest.advanceTimersByTime(1000);
+    metrics._sample();
+    metrics.markExperimentEnd();
+    const snapshot = metrics.snapshot();
+    expect(snapshot.costHistory[0]).toMatchObject({ phase: 'test', actualCostUsd: 0 });
+    expect(snapshot.costHistory.at(-1)).toMatchObject({ phase: 'test',
+      actualCostUsd: snapshot.cost.estimatedCloudCostUsd,
+      predictedCostUsd: snapshot.cost.predictedCloudCostUsd });
+    expect(snapshot.costHistory.at(-1).timestamp).toBe(snapshot.experiment.endedAt);
+    expect(snapshot.experiment.durationSec).toBe(5);
+    jest.advanceTimersByTime(6000);
+    metrics._sample();
+    expect(metrics.snapshot().costHistory).toEqual(snapshot.costHistory);
+    metrics.reset();
+    expect(metrics.snapshot()).toMatchObject({ costHistory: [], experiment: {
+      startedAt: null, endedAt: null, durationSec: null } });
+  });
+
+  test('bounds cost history while retaining the initial and latest samples', () => {
+    metrics.markExperimentStart(1000);
+    const first = metrics.snapshot().costHistory[0];
+    for (let i = 0; i < 700; i++) {
+      metrics.totalActualCostUsd = i / 1000000;
+      metrics._sample();
+    }
+    const samples = metrics.snapshot().costHistory;
+    expect(samples).toHaveLength(600);
+    expect(samples[0]).toEqual(first);
+    expect(samples.at(-1).actualCostUsd).toBe(0.000699);
+  });
 });

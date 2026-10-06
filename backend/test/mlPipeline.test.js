@@ -40,6 +40,7 @@ test('HTTP prediction failure completes the gateway request and balances inFligh
   const result = await gateway.handle(request);
   expect(result).toMatchObject({ decision: 'REJECT', reason: 'ml_prediction_failed', status: 503 });
   expect(metrics.snapshot()).toMatchObject({ incoming: 1, rejected: 1, inFlight: 0,
+    decisionReasons: [{ decision: 'REJECT', reason: 'ml_prediction_failed', count: 1 }],
     ml: { predictionCount: 1, errorCount: 1 } });
 });
 
@@ -78,5 +79,14 @@ test('comparison experiment reports every failed prediction instead of silently 
     expect(result.predictive.ml.errorCount).toBe(result.totalRequests);
     expect(result.predictive.inFlight).toBe(0);
     expect(result.predictive.incoming).toBe(result.predictive.processed + result.predictive.rejected);
+    expect(result.predictive.decisionReasons).toEqual([
+      { decision: 'REJECT', reason: 'ml_prediction_failed', count: result.totalRequests },
+    ]);
+    for (const name of ['baseline', 'predictive']) {
+      const snapshot = result[name];
+      expect(snapshot.costHistory.at(-1).actualCostUsd).toBe(snapshot.cost.estimatedCloudCostUsd);
+      expect(snapshot.costHistory.every(sample => sample.phase === name)).toBe(true);
+    }
+    expect(result.baseline.experiment.endedAt).toBeLessThanOrEqual(result.predictive.experiment.startedAt);
   } finally { await new Promise(resolve => server.close(resolve)); }
 });

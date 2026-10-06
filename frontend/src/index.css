@@ -71,6 +71,14 @@ input, select, button {
   font-size: inherit;
 }
 
+strong, .metric-value {
+  font-variant-numeric: tabular-nums;
+}
+
+.recharts-wrapper, .recharts-responsive-container {
+  min-width: 0;
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 8px;

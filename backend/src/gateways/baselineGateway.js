@@ -53,6 +53,7 @@ class BaselineGateway {
 
     this.metrics.record({
       decision,
+      reason,
       status,
       latencyMs,
       slaMet,

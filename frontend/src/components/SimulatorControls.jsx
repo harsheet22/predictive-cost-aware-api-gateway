@@ -9,7 +9,7 @@ const PROFILES = [
   { id: 'heavy_tail', label: 'Heavy Tail', desc: '45 req/s, many reports' },
   { id: 'stress', label: 'Stress', desc: '200 req/s, CPU-heavy' },
   { id: 'overload', label: 'Overload', desc: '500 req/s, extreme' },
-  { id: 'demo', label: 'Demo (tuned)', desc: '120 req/s, shows all 4 decisions' },
+  { id: 'demo', label: 'Demo', desc: '120 req/s, mixed workload' },
 ];
 
 /**
@@ -38,9 +38,10 @@ export function SimulatorControls({ onRun, running, lastResult }) {
     <div className="simulator-controls">
       <h3 className="chart-title">Experiment Controls</h3>
 
+      <div className="controls-layout">
       <div className="control-group">
-        <label>Workload Profile</label>
-        <select value={profile} onChange={(e) => setProfile(e.target.value)} disabled={running}>
+        <label htmlFor="workload-profile">Workload Profile</label>
+        <select id="workload-profile" value={profile} onChange={(e) => setProfile(e.target.value)} disabled={running}>
           {PROFILES.map((p) => (
             <option key={p.id} value={p.id}>{p.label} — {p.desc}</option>
           ))}
@@ -49,9 +50,10 @@ export function SimulatorControls({ onRun, running, lastResult }) {
 
       <div className="control-row">
         <div className="control-group">
-          <label>Duration (seconds)</label>
+          <label htmlFor="workload-duration">Duration (seconds)</label>
           <input
             type="number"
+            id="workload-duration"
             min="1"
             max="300"
             value={duration}
@@ -60,9 +62,10 @@ export function SimulatorControls({ onRun, running, lastResult }) {
           />
         </div>
         <div className="control-group">
-          <label>Random Seed</label>
+          <label htmlFor="workload-seed">Random Seed</label>
           <input
             type="number"
+            id="workload-seed"
             min="0"
             max="999999"
             value={seed}
@@ -85,44 +88,18 @@ export function SimulatorControls({ onRun, running, lastResult }) {
         </button>
       </div>
 
+      </div>
+
       {error && <div className="control-error">{error}</div>}
 
       {lastResult && (
         <div className="last-run-summary">
           <h4>Last Run: {lastResult.profile} ({lastResult.durationSec}s, seed {lastResult.seed})</h4>
-          <div className="summary-grid">
-            <MetricCard
-              label="Baseline Processed"
-              value={lastResult.baseline?.processed || 0}
-              delta={lastResult.predictive?.processed ? ((lastResult.predictive.processed - lastResult.baseline.processed) / lastResult.baseline.processed * 100) : undefined}
-            />
-            <MetricCard
-              label="Cost Savings"
-              value={`${(lastResult.savings?.percent || 0).toFixed(1)}%`}
-            />
-            <MetricCard
-              label="SLA Δ"
-              value={lastResult.savings?.slaMetDelta || 0}
-            />
+          <div className="last-run-facts">
+            <span>Baseline processed <strong>{lastResult.baseline?.processed || 0}</strong></span>
+            <span>Cost savings <strong>{(lastResult.savings?.percent || 0).toFixed(1)}%</strong></span>
+            <span>SLA delta <strong>{lastResult.savings?.slaMetDelta || 0}</strong></span>
           </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function MetricCard({ label, value, delta }) {
-  const deltaColor = delta === undefined ? 'gray'
-    : delta > 0 ? 'green'
-    : delta < 0 ? 'red' : 'gray';
-
-  return (
-    <div className="mini-metric-card">
-      <div className="mini-metric-label">{label}</div>
-      <div className="mini-metric-value">{value}</div>
-      {delta !== undefined && (
-        <div className="mini-metric-delta" style={{ color: deltaColor }}>
-          {delta > 0 ? '▲' : delta < 0 ? '▼' : '●'} {Math.abs(delta).toFixed(1)}%
         </div>
       )}
     </div>

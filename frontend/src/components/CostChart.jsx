@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
-  Tooltip, Legend, ResponsiveContainer, Area
+  Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 import { MetricCard } from './MetricCard';
 
@@ -16,18 +16,18 @@ export function CostChart({ data, height = 280 }) {
 
   return (
     <div className="chart-container">
-      <h3 className="chart-title">Cloud Cost Over Time</h3>
+      <p className="chart-subtitle">Sequential phases: baseline first, predictive second.</p>
       <ResponsiveContainer width="100%" height={height}>
         <LineChart data={data} margin={{ top: 5, right: 10, left: 40, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+          <CartesianGrid strokeDasharray="3 3" stroke="#26364c" />
           <XAxis
             dataKey="timestamp"
-            tick={{ fontSize: 10 }}
+            tick={{ fontSize: 10, fill: '#94a3b8' }}
             tickFormatter={(v) => new Date(v).toLocaleTimeString()}
             interval="preserveStartEnd"
           />
           <YAxis
-            tick={{ fontSize: 10 }}
+            tick={{ fontSize: 10, fill: '#94a3b8' }}
             tickFormatter={(v) => `$${v.toFixed(6)}`}
             domain={[0, 'auto']}
           />
@@ -41,26 +41,16 @@ export function CostChart({ data, height = 280 }) {
               };
               return [name === 'savings' ? `${value.toFixed(1)}%` : `$${value.toFixed(6)}`, labels[name] || name];
             }}
-            labelFormatter={(v) => new Date(v).toLocaleTimeString()}
+            contentStyle={{ background: '#111c2d', border: '1px solid #34465f', borderRadius: 8, color: '#edf3fc' }}
+            labelFormatter={(v, payload) => `${new Date(v).toLocaleTimeString()} — ${payload?.[0]?.payload?.phase || ''} phase`}
           />
           <Legend />
-          <Line type="monotone" dataKey="baselineCost" stroke="#ef4444" strokeWidth={2} dot={false} name="Baseline Actual" />
-          <Line type="monotone" dataKey="predictiveCost" stroke="#10b981" strokeWidth={2} dot={false} name="Predictive Actual" />
-          <Line type="monotone" dataKey="predictedCost" stroke="#f59e0b" strokeWidth={2} strokeDasharray="5 5" dot={false} name="Predicted (ML)" />
+          <Line type="monotone" dataKey="baselineCost" stroke="#3b82f6" strokeWidth={2} dot={false} isAnimationActive={false} name="Baseline Actual" />
+          <Line type="monotone" dataKey="predictiveCost" stroke="#10b981" strokeWidth={2} dot={false} isAnimationActive={false} name="Predictive Actual" />
+          <Line type="monotone" dataKey="predictedCost" stroke="#f59e0b" strokeWidth={2} strokeDasharray="5 5" dot={false} isAnimationActive={false} name="Predicted (ML)" />
         </LineChart>
       </ResponsiveContainer>
 
-      {/* Savings area chart */}
-      <div className="chart-subtitle">Cost Savings %</div>
-      <ResponsiveContainer width="100%" height={120}>
-        <AreaChart data={data} margin={{ top: 5, right: 10, left: 40, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-          <XAxis dataKey="timestamp" tick={{ fontSize: 10 }} tickFormatter={(v) => new Date(v).toLocaleTimeString()} />
-          <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `${v.toFixed(1)}%`} />
-          <Tooltip formatter={(value) => [`${value.toFixed(1)}%`, 'Savings']} />
-          <Area type="monotone" dataKey="savings" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.2} name="Savings %" />
-        </AreaChart>
-      </ResponsiveContainer>
     </div>
   );
 }
@@ -69,53 +59,34 @@ export function CostChart({ data, height = 280 }) {
  * CostSummaryCards - current cost snapshot
  */
 export function CostSummaryCards({ baseline, predictive, savings }) {
-  return (
-    <div className="cost-summary-grid">
-      <MetricCard
-        label="Baseline Cost"
-        value={baseline?.cost?.estimatedCloudCostUsd?.toFixed(6) || '0.000000'}
-        unit=" USD"
-      />
-      <MetricCard
-        label="Predictive Cost"
-        value={predictive?.cost?.estimatedCloudCostUsd?.toFixed(6) || '0.000000'}
-        unit=" USD"
-        delta={savings?.percent}
-      />
-      <MetricCard
-        label="Cost / Success (Baseline)"
-        value={baseline?.cost?.costPerSuccessUsd?.toFixed(9) || '0.000000000'}
-        unit=" USD"
-      />
-      <MetricCard
-        label="Cost / Success (Predictive)"
-        value={predictive?.cost?.costPerSuccessUsd?.toFixed(9) || '0.000000000'}
-        unit=" USD"
-        delta={savings?.costPerSuccessDelta ? (savings.costPerSuccessDelta / (baseline?.cost?.costPerSuccessUsd || 1) * 100) : undefined}
-      />
+  const baselineCost = baseline?.cost?.estimatedCloudCostUsd || 0;
+  const predictiveCost = predictive?.cost?.estimatedCloudCostUsd || 0;
+  const scale = Math.max(baselineCost, predictiveCost);
+  return <div className="cost-comparison">
+    <div className="cost-gateways">
+      {[
+        ['Baseline', baselineCost, baseline?.cost?.costPerSuccessUsd, 'baseline'],
+        ['Predictive', predictiveCost, predictive?.cost?.costPerSuccessUsd, 'predictive'],
+      ].map(([name, cost, perSuccess, variant]) => <div className={`cost-gateway ${variant}`} key={name}>
+        <span className="cost-label"><i className={`legend-dot ${variant}-dot`} />{name} Cost</span>
+        <strong>${cost.toFixed(6)}</strong>
+        <div className="cost-bar"><div style={{ width: `${scale ? cost / scale * 100 : 0}%` }} /></div>
+        <span className="cost-per-success">${perSuccess?.toFixed(9) || '0.000000000'} / success</span>
+      </div>)}
     </div>
-  );
+    <div className={`savings-banner ${savings?.percent < 0 ? 'negative' : ''}`}>
+      <div><span>Cost savings</span><strong>{savings ? `${savings.percent.toFixed(1)}%` : '—'}</strong></div>
+      <p>{savings ? `${savings.absoluteUsd < 0 ? 'Additional cost' : 'Estimated reduction'}: $${Math.abs(savings.absoluteUsd).toFixed(6)}` : 'Comparison available after both gateway phases complete.'}</p>
+    </div>
+  </div>;
 }
 
-/**
- * PredictionAccuracyChart - MAE, RMSE, R² over time
- */
 export function PredictionAccuracyChart({ predictive }) {
-  if (!predictive?.prediction?.samples) {
-    return <div className="chart-empty">No prediction data yet</div>;
-  }
-
+  if (!predictive?.prediction?.samples) return <div className="chart-empty">No online prediction samples yet</div>;
   const p = predictive.prediction;
-  return (
-    <div className="chart-container">
-      <h3 className="chart-title">Prediction Accuracy</h3>
-      <div className="accuracy-grid">
-        <MetricCard label="Samples" value={p.samples} />
-        <MetricCard label="MAE" value={p.maeMs?.toFixed(1) || '0'} unit=" ms" />
-        <MetricCard label="RMSE" value={p.rmseMs?.toFixed(1) || '0'} unit=" ms" />
-        <MetricCard label="R²" value={p.r2?.toFixed(3) || '0'} />
-        <MetricCard label="MAPE" value={(p.mape * 100).toFixed(1)} unit="%" />
-      </div>
-    </div>
-  );
+  return <div className="online-error"><div><h3>Online Execution Prediction Error</h3><p>Execution-time estimates compared with measured Node execution wall time.</p></div><div className="accuracy-grid">
+    <MetricCard label="MAE" value={p.maeMs?.toFixed(1) || '0'} unit=" ms" />
+    <MetricCard label="RMSE" value={p.rmseMs?.toFixed(1) || '0'} unit=" ms" />
+    <MetricCard label="Samples" value={p.samples} />
+  </div></div>;
 }

@@ -1,149 +1,36 @@
 import React from 'react';
-import {
-  PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
-  BarChart, Bar, XAxis, YAxis, CartesianGrid
-} from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 
-const DECISION_COLORS = {
-  ALLOW: '#10b981',
-  DOWNGRADE: '#f59e0b',
-  DELAY: '#3b82f6',
-  REJECT: '#ef4444',
-};
-
-const DECISION_LABELS = {
-  ALLOW: 'Allowed',
-  DOWNGRADE: 'Downgraded',
-  DELAY: 'Delayed',
-  REJECT: 'Rejected',
-};
-
-/**
- * DecisionBreakdown - pie chart + bar chart of decisions with reasons
- */
-export function DecisionBreakdown({ predictive, baseline }) {
-  if (!predictive) return <div className="chart-empty">No data</div>;
-
+const COLORS = { ALLOW: '#10b981', DOWNGRADE: '#f59e0b', DELAY: '#3b82f6', REJECT: '#ef4444' };
+export function DecisionBreakdown({ predictive }) {
   const decisions = [
-    { name: 'ALLOW', value: predictive.allowed || 0 },
-    { name: 'DOWNGRADE', value: predictive.downgraded || 0 },
-    { name: 'DELAY', value: predictive.delayed || 0 },
-    { name: 'REJECT', value: predictive.rejected || 0 },
-  ].filter((d) => d.value > 0);
-
+    { name: 'ALLOW', value: predictive?.allowed || 0 },
+    { name: 'DOWNGRADE', value: predictive?.downgraded || 0 },
+    { name: 'DELAY', value: predictive?.delayed || 0 },
+    { name: 'REJECT', value: predictive?.rejected || 0 },
+  ];
   const total = decisions.reduce((sum, d) => sum + d.value, 0);
-
   return (
     <div className="decision-breakdown">
-      <h3 className="chart-title">Decision Breakdown (Predictive Gateway)</h3>
-
-      <div className="decision-grid">
-        {/* Pie Chart */}
-        <div className="decision-pie">
-          <ResponsiveContainer width="100%" height={250}>
-            <PieChart>
-              <Pie
-                data={decisions}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={100}
-                fill="#8884d8"
-                paddingAngle={2}
-                dataKey="value"
-                nameKey="name"
-                label={({ name, percent }) => `${DECISION_LABELS[name]} ${(percent * 100).toFixed(0)}%`}
-                labelLine={false}
-              >
-                {decisions.map((d, i) => (
-                  <Cell key={`cell-${d.name}`} fill={DECISION_COLORS[d.name]} />
-                ))}
-              </Pie>
-              <Tooltip formatter={(value) => [value, DECISION_LABELS[value] || '']} />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Reasons Bar Chart */}
-        <div className="decision-reasons">
-          <h4>Rejection/Delay Reasons</h4>
-          {predictive.rateLimited > 0 || predictive.shed > 0 || predictive.errors > 0 ? (
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={[
-                { name: 'Rate Limited', value: predictive.rateLimited || 0 },
-                { name: 'Load Shed', value: predictive.shed || 0 },
-                { name: 'Errors', value: predictive.errors || 0 },
-              ].filter((d) => d.value > 0)}
-                layout="vertical"
-                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                <XAxis type="number" tick={{ fontSize: 11 }} />
-                <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 11 }} />
-                <Tooltip />
-                <Bar dataKey="value" fill="#ef4444" radius={[0, 4, 4, 0]} maxBarSize={30} />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <p className="no-reasons">No rejections/delays</p>
-          )}
-        </div>
+      <div className="decision-donut">
+        {total > 0 ? <ResponsiveContainer width="100%" height={190}>
+          <PieChart><Pie data={decisions.filter(d => d.value > 0)} cx="50%" cy="50%" innerRadius={62} outerRadius={82} paddingAngle={total && decisions.filter(d => d.value > 0).length > 1 ? 3 : 0} dataKey="value" nameKey="name" stroke="none" isAnimationActive={false}>
+            {decisions.filter(d => d.value > 0).map(d => <Cell key={d.name} fill={COLORS[d.name]} />)}
+          </Pie><Tooltip formatter={(value, name) => [value, name]} contentStyle={{ background: '#111c2d', border: '1px solid #34465f', borderRadius: 8, color: '#edf3fc' }} /></PieChart>
+        </ResponsiveContainer> : <div className="empty-donut" />}
+        <div className="donut-label"><strong>{total}</strong><span>decisions</span></div>
       </div>
-
-      {/* Summary Stats */}
-      <div className="decision-summary">
-        <MetricCard label="Total Decisions" value={total} />
-        <MetricCard label="Allow Rate" value={total ? `${((predictive.allowed || 0) / total * 100).toFixed(1)}%` : '0%'} />
-        <MetricCard label="Downgrade Rate" value={total ? `${((predictive.downgraded || 0) / total * 100).toFixed(1)}%` : '0%'} />
-        <MetricCard label="Reject Rate" value={total ? `${((predictive.rejected || 0) / total * 100).toFixed(1)}%` : '0%'} />
+      <div className="decision-counts">
+        {decisions.map(d => <div className="decision-count" key={d.name}><span><i style={{ background: COLORS[d.name] }} />{d.name}</span><strong>{d.value}</strong><small>{total ? (d.value / total * 100).toFixed(1) : '0.0'}%</small></div>)}
       </div>
     </div>
   );
 }
 
-/**
- * DecisionReasonTable - detailed table of reasons
- */
 export function DecisionReasonTable({ predictive }) {
-  if (!predictive) return null;
-
-  // Aggregate reasons from the comparison result if available
-  // For now show static breakdown
-  return (
-    <div className="reason-table">
-      <h4>Decision Reasons</h4>
-      <table>
-        <thead>
-          <tr>
-            <th>Decision</th>
-            <th>Reason</th>
-            <th>Count</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td className="decision-allow">ALLOW</td><td>cheap_and_budget_ok</td><td>{predictive.allowed || 0}</td></tr>
-          <tr><td className="decision-allow">ALLOW</td><td>high_priority_budget_ok</td><td>—</td></tr>
-          <tr><td className="decision-downgrade">DOWNGRADE</td><td>expensive_downgraded</td><td>{predictive.downgraded || 0}</td></tr>
-          <tr><td className="decision-downgrade">DOWNGRADE</td><td>downgraded_cached</td><td>—</td></tr>
-          <tr><td className="decision-delay">DELAY</td><td>expensive_under_pressure</td><td>{predictive.delayed || 0}</td></tr>
-          <tr><td className="decision-delay">DELAY</td><td>cheap_concurrency_full</td><td>—</td></tr>
-          <tr><td className="decision-reject">REJECT</td><td>budget_exceeded</td><td>—</td></tr>
-          <tr><td className="decision-reject">REJECT</td><td>cpu_hard_limit</td><td>—</td></tr>
-          <tr><td className="decision-reject">REJECT</td><td>queue_full</td><td>—</td></tr>
-          <tr><td className="decision-reject">REJECT</td><td>concurrency_full</td><td>—</td></tr>
-          <tr><td className="decision-reject">REJECT</td><td>rate_limited</td><td>{predictive.rateLimited || 0}</td></tr>
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-function MetricCard({ label, value }) {
-  return (
-    <div className="mini-metric-card">
-      <div className="mini-metric-label">{label}</div>
-      <div className="mini-metric-value">{value}</div>
-    </div>
-  );
+  const reasons = predictive?.decisionReasons || [];
+  return <div className="reason-table"><h3>Recorded decision reasons</h3><div className="table-scroll"><table><thead><tr><th>Decision</th><th>Reason</th><th>Count</th></tr></thead><tbody>
+    {reasons.map(({ decision, reason, count }) => <tr key={`${decision}:${reason}`}><td><span className={`decision-badge decision-${decision.toLowerCase()}`}>{decision}</span></td><td className="reason-code">{reason}</td><td>{count}</td></tr>)}
+    {!reasons.length && <tr><td colSpan={3}>No recorded decision reasons yet</td></tr>}
+  </tbody></table></div></div>;
 }

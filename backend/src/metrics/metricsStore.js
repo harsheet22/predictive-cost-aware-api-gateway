@@ -39,6 +39,7 @@ class MetricsStore {
     this.allowed = 0;
     this.delayed = 0;
     this.downgraded = 0;
+    this.decisionReasons = {};
 
     // cache
     this.cacheHits = 0;
@@ -53,6 +54,7 @@ class MetricsStore {
     // cost
     this.totalActualCostUsd = 0;
     this.totalPredictedCostUsd = 0;
+    this.costHistory = [];
 
     // prediction accuracy (online regression error)
     this.pred = { n: 0, sumAbs: 0, sumSq: 0, sumPct: 0, sumY: 0, sumY2: 0 };
@@ -74,6 +76,9 @@ class MetricsStore {
     this.mlInferenceLatencySum = 0;
     this.mlQueueWaitSum = 0;
     this.mlTotalLatencySum = 0;
+    this.predictionGate = { submissions: 0, admissions: 0, rejections: 0, expirations: 0,
+      attempts: 0, rejectionReasons: {}, queueDepth: 0, queuePeak: 0, queueOccupancy: 0,
+      estimatedWaitSum: 0, actualWaitSum: 0, actualWaitCount: 0 };
 
     // concurrency tracking
     this._concurrencySum = 0;
@@ -93,6 +98,7 @@ class MetricsStore {
     // Experiment throughput (calculated at experiment end, not sliding window)
     this._experimentStartTime = null;
     this._experimentEndTime = null;
+    this._experimentDurationSec = null;
     this.experimentThroughput = {
       incomingPerSec: 0,
       processedPerSec: 0,
@@ -120,11 +126,13 @@ class MetricsStore {
     this._experimentStartTime = Date.now();
     this._experimentEndTime = null;
     this._experimentDurationSec = durationSec;
+    this._sampleCost();
   }
 
   /** Mark the end of an experiment run and calculate throughput. */
   markExperimentEnd() {
     this._experimentEndTime = Date.now();
+    this._sampleCost();
     if (this._experimentStartTime && this._experimentDurationSec) {
       const durationSec = this._experimentDurationSec;
       this.experimentThroughput = {
@@ -138,6 +146,20 @@ class MetricsStore {
   }
 
   recordCacheHit() { this.cacheHits++; }
+  recordPredictionGate(event) {
+    const g = this.predictionGate;
+    g.queueDepth = event.queued; g.queuePeak = event.peakQueued; g.queueOccupancy = event.occupancy;
+    if (event.kind === 'admission' || (event.kind === 'rejection' && event.reason !== 'prediction_queue_expired')) {
+      g.submissions++; g.estimatedWaitSum += event.estimatedWaitMs;
+    }
+    if (event.kind === 'admission') g.admissions++;
+    if (event.kind === 'start') g.attempts++;
+    if (event.kind === 'rejection') {
+      g.rejections++; g.rejectionReasons[event.reason] = (g.rejectionReasons[event.reason] || 0) + 1;
+      if (event.reason === 'prediction_queue_expired') g.expirations++;
+    }
+    if (Number.isFinite(event.actualWaitMs)) { g.actualWaitSum += event.actualWaitMs; g.actualWaitCount++; }
+  }
   recordCacheMiss() { this.cacheMisses++; }
   setQueue(depth, max) { this.queueDepth = depth; this.queueMax = max; }
 
@@ -189,6 +211,10 @@ class MetricsStore {
     if (o.status === 503) this.shed++;
     if (o.status >= 500 && o.status !== 503) this.errors++;
     if (o.slaMet) this.slaMet++;
+    if (o.reason) {
+      const key = `${o.decision}:${o.reason}`;
+      this.decisionReasons[key] = (this.decisionReasons[key] || 0) + 1;
+    }
 
     if (o.decision === 'ALLOW') this.allowed++;
     else if (o.decision === 'DELAY') this.delayed++;
@@ -234,6 +260,7 @@ class MetricsStore {
 
   _sample() {
     const now = Date.now();
+    if (this._experimentStartTime != null && this._experimentEndTime == null) this._sampleCost();
     const cutoff = now - WINDOW_MS;
     while (this._recent.length && this._recent[0] < cutoff) this._recent.shift();
     const uptimeSec = Math.max((now - this.startedAt) / 1000, 0.001);
@@ -265,6 +292,18 @@ class MetricsStore {
     };
   }
 
+  // Real cumulative samples from this gateway's sequential experiment phase.
+  // Keep the initial sample and a bounded tail; reset() clears the previous run.
+  _sampleCost() {
+    this.costHistory.push({
+      timestamp: Date.now(),
+      phase: this.name,
+      actualCostUsd: Number(this.totalActualCostUsd.toFixed(9)),
+      predictedCostUsd: Number(this.totalPredictedCostUsd.toFixed(9)),
+    });
+    if (this.costHistory.length > 600) this.costHistory.splice(1, 1);
+  }
+
   snapshot() {
     const totalRequests = this.cacheHits + this.cacheMisses;
     return {
@@ -276,6 +315,10 @@ class MetricsStore {
       delayed: this.delayed,
       downgraded: this.downgraded,
       allowed: this.allowed,
+      decisionReasons: Object.entries(this.decisionReasons).map(([key, count]) => {
+        const separator = key.indexOf(':');
+        return { decision: key.slice(0, separator), reason: key.slice(separator + 1), count };
+      }),
       rateLimited: this.rateLimited,
       shed: this.shed,
       errors: this.errors,
@@ -284,6 +327,12 @@ class MetricsStore {
       rps: this.rps,
       // Experiment throughput (calculated at experiment end)
       experimentThroughput: this.experimentThroughput,
+      experiment: {
+        startedAt: this._experimentStartTime,
+        endedAt: this._experimentEndTime,
+        durationSec: this._experimentDurationSec,
+      },
+      costHistory: this.costHistory.map(sample => ({ ...sample })),
       cache: {
         hits: this.cacheHits,
         misses: this.cacheMisses,
@@ -316,6 +365,13 @@ class MetricsStore {
           : 0,
       },
       prediction: this._predictionStats(),
+      predictionGate: {
+        ...this.predictionGate,
+        rejectionReasons: { ...this.predictionGate.rejectionReasons },
+        avgEstimatedWaitMs: this.predictionGate.submissions ? this.predictionGate.estimatedWaitSum / this.predictionGate.submissions : 0,
+        avgActualWaitMs: this.predictionGate.actualWaitCount ? this.predictionGate.actualWaitSum / this.predictionGate.actualWaitCount : 0,
+        successfulPredictions: this.mlSuccessCount, mlFailures: this.mlPredictionErrors,
+      },
       // ML prediction metrics
       ml: {
         predictionCount: this.mlPredictionCount,

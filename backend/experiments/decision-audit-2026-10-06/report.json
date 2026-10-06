@@ -1,0 +1,4129 @@
+{
+  "startedAt": "2026-10-06T06:27:10.719Z",
+  "seed": 42,
+  "durationSec": 5,
+  "percentileMethod": "nearest rank",
+  "methodology": "Fresh gateways per profile; baseline then predictive; unchanged replay; one excluded direct HTTP warmup before predictive; AsyncLocalStorage identifies every admission attempt. Used state was captured by the gateway before prediction. Fresh state at _make is separately observed. No per-request console/file I/O during replay.",
+  "config": {
+    "ports": {
+      "backend": 3000,
+      "ml": 8000,
+      "dashboard": 5173
+    },
+    "executor": {
+      "hashIterationsPerUnit": 400,
+      "minHashIterations": 500,
+      "syncIterationCap": 25000
+    },
+    "requestTypes": {
+      "image_resize": {
+        "cpuUnits": 12,
+        "ioMs": 8,
+        "payloadCpuFactor": 0.5,
+        "label": "Image resize"
+      },
+      "hash_compute": {
+        "cpuUnits": 16,
+        "ioMs": 4,
+        "payloadCpuFactor": 0.3,
+        "label": "Hash compute"
+      },
+      "db_query": {
+        "cpuUnits": 3,
+        "ioMs": 30,
+        "payloadCpuFactor": 0,
+        "label": "Database query"
+      },
+      "report_generate": {
+        "cpuUnits": 28,
+        "ioMs": 20,
+        "payloadCpuFactor": 0.8,
+        "label": "Report generation"
+      },
+      "ml_inference": {
+        "cpuUnits": 12,
+        "ioMs": 12,
+        "payloadCpuFactor": 0.4,
+        "label": "ML inference"
+      }
+    },
+    "costModel": {
+      "vcpuCount": 1,
+      "memoryMB": 512,
+      "pricePerVcpuSec": 0.0000166667,
+      "pricePerGbSec": 0.0000166667,
+      "pricePerInvocation": 2e-7,
+      "pricePerGbEgress": 0.09,
+      "minBilledMs": 1
+    },
+    "baseline": {
+      "maxConcurrent": 8,
+      "rateLimit": {
+        "enabled": true,
+        "capacity": 200,
+        "refillPerSec": 100
+      }
+    },
+    "predictive": {
+      "maxConcurrent": 8,
+      "maxQueue": 32,
+      "mlConcurrency": 2,
+      "budget": {
+        "windowMs": 10000,
+        "usdPerWindow": 0.001,
+        "cheapShare": 0.3
+      },
+      "utilization": {
+        "softPct": 65,
+        "hardPct": 90
+      },
+      "downgrade": {
+        "enabled": true,
+        "cpuFactor": 0.25,
+        "ioFactor": 0.5
+      },
+      "delay": {
+        "enabled": true,
+        "maxWaitMs": 750,
+        "pollMs": 25
+      },
+      "rateLimit": {
+        "enabled": true,
+        "capacity": 300,
+        "refillPerSec": 150
+      },
+      "cache": {
+        "enabled": true,
+        "ttlMs": 30000,
+        "maxEntries": 500
+      }
+    },
+    "sla": {
+      "targetLatencyMs": 250
+    },
+    "simulator": {
+      "defaultProfile": "mixed",
+      "profiles": {
+        "light": {
+          "arrivalRatePerSec": 8,
+          "typeWeights": {
+            "db_query": 0.5,
+            "image_resize": 0.25,
+            "hash_compute": 0.15,
+            "ml_inference": 0.1,
+            "report_generate": 0
+          }
+        },
+        "normal": {
+          "arrivalRatePerSec": 25,
+          "typeWeights": {
+            "db_query": 0.3,
+            "image_resize": 0.25,
+            "hash_compute": 0.2,
+            "ml_inference": 0.15,
+            "report_generate": 0.1
+          }
+        },
+        "burst": {
+          "arrivalRatePerSec": 80,
+          "typeWeights": {
+            "db_query": 0.2,
+            "image_resize": 0.25,
+            "hash_compute": 0.25,
+            "ml_inference": 0.15,
+            "report_generate": 0.15
+          }
+        },
+        "heavy_tail": {
+          "arrivalRatePerSec": 45,
+          "typeWeights": {
+            "db_query": 0.15,
+            "image_resize": 0.2,
+            "hash_compute": 0.25,
+            "ml_inference": 0.1,
+            "report_generate": 0.3
+          }
+        },
+        "mixed": {
+          "arrivalRatePerSec": 40,
+          "typeWeights": {
+            "db_query": 0.25,
+            "image_resize": 0.22,
+            "hash_compute": 0.22,
+            "ml_inference": 0.16,
+            "report_generate": 0.15
+          }
+        },
+        "stress": {
+          "arrivalRatePerSec": 200,
+          "typeWeights": {
+            "db_query": 0.1,
+            "image_resize": 0.2,
+            "hash_compute": 0.3,
+            "ml_inference": 0.15,
+            "report_generate": 0.25
+          }
+        },
+        "overload": {
+          "arrivalRatePerSec": 500,
+          "typeWeights": {
+            "db_query": 0.05,
+            "image_resize": 0.15,
+            "hash_compute": 0.35,
+            "ml_inference": 0.15,
+            "report_generate": 0.3
+          }
+        },
+        "demo": {
+          "arrivalRatePerSec": 120,
+          "typeWeights": {
+            "db_query": 0.2,
+            "image_resize": 0.2,
+            "hash_compute": 0.25,
+            "ml_inference": 0.15,
+            "report_generate": 0.2
+          }
+        }
+      },
+      "priorityWeights": {
+        "low": 0.2,
+        "normal": 0.6,
+        "high": 0.2
+      },
+      "payloadBytes": {
+        "min": 256,
+        "max": 16384
+      },
+      "hotKeyBias": 0.7
+    },
+    "data": {
+      "totalItems": 100,
+      "hotKeys": 10
+    },
+    "metrics": {
+      "sampleIntervalMs": 1000,
+      "latencyBucketsMs": [
+        1,
+        2,
+        5,
+        10,
+        20,
+        35,
+        50,
+        75,
+        100,
+        150,
+        250,
+        400,
+        700,
+        1000,
+        2000,
+        5000
+      ]
+    }
+  },
+  "sourceHashesBefore": {
+    "backend\\src\\config.js": "859a80e32c4d0edf302884931eaf3291c20105c935df2455fe9855aeffe8d031",
+    "backend\\src\\decision\\cache.js": "48067dcdaee8cc1c1f8eda5ace88bd605fb8a231d612af4db299e3cf472ca044",
+    "backend\\src\\decision\\decisionEngine.js": "87aecd72104d30c5eaefc0cc49cf68e5ec9bb4077e30070ff31781c9528abf10",
+    "backend\\src\\decision\\heuristicPredictor.js": "065d64f882930423a56ce39f940d7345b6ef3de77dadbc9460563a962f00fd4c",
+    "backend\\src\\decision\\limiters.js": "9fb068098bf465fedada35a11c20809b61d5777e306d846c62b877d6fdb476de",
+    "backend\\src\\gateways\\baselineGateway.js": "2fb516f43e111c44f91e7d98d6bd7d26a7fc0bc54cd21ae9fc06ed73f3353a13",
+    "backend\\src\\gateways\\predictiveGateway.js": "4ba72ea866e34ba187918c2b88c39ec3f7d8c9fae316acdfa417e074d7ccea58",
+    "backend\\src\\index.js": "c6c4b81aafb181d3aaced716e3a0799e61f4d598adbef838a86b1f17860e21c8",
+    "backend\\src\\metrics\\costCalculator.js": "8d75eec269af8100e26e36fc8a22f307eb149271bd20bd541bab1142a63e3037",
+    "backend\\src\\metrics\\metricsStore.js": "a45e3a7a2d9a76ec831fd91bba796e4cacd6491b80f51a888b836da3c5f2c8b7",
+    "backend\\src\\ml\\mlClient.js": "a8141184c11fe4574e85bc2764058c5cca61468b6393a29e4aa23423d3f53a54",
+    "backend\\src\\ml\\predictionQueue.js": "2f209a952b2b199ce0699017522206ed2c28e606cafa06814d1dd49d66f7f0b0",
+    "backend\\src\\routes\\execute.js": "2cfa2aea58ed1444aea3be9e5baa2224df0788d43aaeb5340986b6fda5ec13d3",
+    "backend\\src\\routes\\health.js": "169e7684106a7862e184acef7bb1f192d45bff662ac49aacb1502abaa8c68739",
+    "backend\\src\\routes\\metrics.js": "5eb3416b5cfa43b22744736419c12c4dc11b97f6c4ed218706ffafd0b58e2e6c",
+    "backend\\src\\simulator\\distributions.js": "339e2b242fb650b68bddb624f5763a851ba96728c7fed37b39b01b0b935685a2",
+    "backend\\src\\simulator\\simulator.js": "7650a2f9f7f355926a482e90d41d43bda55384efded31e9026c145ea1d83f2c4",
+    "backend\\src\\workload\\executor.js": "fdb94d69b0e2c3f0340eaafa7d1fcd2f34fad28917c24f2caa017a0791c43666",
+    "backend\\src\\workload\\jobs.js": "d866ceb47a12d1b2aa2d2eed2b184500d2cb13131392ebe7f0d5017da40272f1",
+    "frontend\\src\\api\\client.js": "3ba10bc64ffc023f135c6b2462068bb3992ade4e6be84fe7a0cda5e7dcb4a73d",
+    "frontend\\src\\App.css": "d3d113c17500c9030df746d1ee1c12c55b04d3983f9129f7526ea860cd4f18a4",
+    "frontend\\src\\App.jsx": "78da3001f7c09bdec9693017250f888e85311a73d497ab874aa8d66c258f7b6e",
+    "frontend\\src\\assets\\hero.png": "881ffbcaafc212e49addad08846a5b82761355fa20624253af3477ba33262c5c",
+    "frontend\\src\\assets\\react.svg": "35ef61ed53b323ae94a16a8ec659b3d0af3880698791133f23b084085ab1c2e5",
+    "frontend\\src\\assets\\vite.svg": "5be21acd42eb7b896e517f4e0f0f11eb5c5d9e54fbbcebe9453f033008fcca6f",
+    "frontend\\src\\components\\ComparisonChart.jsx": "dced53484bf3b9659b5290b3de53855823440f644bfc47e0d4687658c7520fb6",
+    "frontend\\src\\components\\CostChart.jsx": "24b4f90797be43633f2dfc2ca623b3666984dddeb1267098f9df807c69f21c71",
+    "frontend\\src\\components\\DecisionBreakdown.jsx": "a982efbf470eb18d5ed32c138f43fc850f23315df93c82dd65f1a8e5fb2187ec",
+    "frontend\\src\\components\\MetricCard.jsx": "963512c431f1fd046494f99494cf5e031d3f375f818746ba700cc589cae26a1a",
+    "frontend\\src\\components\\RequestFeed.jsx": "47da46275178634ce8552e665eda56c33141529ca544e41fbc094b1727be57ae",
+    "frontend\\src\\components\\SimulatorControls.jsx": "bca274bba0ea5bce9f66a49eeb4f2c31a6fb931736bb65151c8751d8beb1a333",
+    "frontend\\src\\components\\ThroughputSummary.jsx": "3c2eda99c1c75ae4e4bfd3ab9e672bfe0f8b825942e1e9c934b2d05ef379a1c1",
+    "frontend\\src\\hooks\\useMetrics.js": "cacc5a3b34104b6c24e740fc570ff67f6611cbd7770a8e799888bdb9567ccdcb",
+    "frontend\\src\\index.css": "cf38a807812c6da37f290485637ee8bd61d0c84bafc283099261ee1cda2103aa",
+    "frontend\\src\\main.jsx": "4b4b864dbe45253425d0c925337180ec07e204295179f80f59551216f466f618",
+    "ml-service\\app\\features.py": "0b41284f6f79a1030bd9750c09651d1f5bf015caa031f9fa5795b0c3cd793607",
+    "ml-service\\app\\main.py": "8106092418a3e5f5a2ba7d5e7e86107f7ab3dfdaeb4e279874494fab6e62cf09",
+    "ml-service\\app\\model_registry.py": "fb7bc3a64b348cabb0436fae94dc4597e69c45c254ea1cfb270d01b73053b801",
+    "ml-service\\app\\predictor.py": "566f2cb9e7b918185221120e18f26d36e5e827b0aefd80a01fb305ef2d1c45b8",
+    "ml-service\\app\\schemas.py": "63dda8792652d7373aa3646ea117f29cc3e45d0249e5a4ee3917aebe724eddf0",
+    "ml-service\\app\\timing.py": "35984ab2cf4f4631d343f981dcdd5077e75e71261e2ebf36a6243262363933fb",
+    "ml-service\\models\\model.pkl": "41cedfee1e5828be7f6fb74512ca919d34daf88f3d0fbf69143f9bd2e449224b",
+    "ml-service\\models\\model_meta.json": "22aa352d04627466b99da5e3d9848ed1549f8f825717752d3c1c3f2593742d62",
+    "ml-service\\training\\evaluate.py": "10c3762abb1bd7bb38c08dbe10f69b22ba65e1aa4abe6bb2750d25ea098abffe",
+    "ml-service\\training\\generate_dataset.py": "7aaa7727fcc99055a2962493a72654b7429f7b1ec671155c745ee3b8111feb62",
+    "ml-service\\training\\train.py": "e6cfcd1fe644ab2ffaffd11b32a165cb0f9ea2a61cbe22279e44ef77ee162b63"
+  },
+  "results": [
+    {
+      "profile": "normal",
+      "requests": 116,
+      "admissionAttempts": 116,
+      "baseline": {
+        "elapsedSec": 8.372792,
+        "snapshot": {
+          "name": "baseline",
+          "uptimeMs": 8375,
+          "incoming": 116,
+          "processed": 116,
+          "rejected": 0,
+          "delayed": 0,
+          "downgraded": 0,
+          "allowed": 116,
+          "decisionReasons": [
+            {
+              "decision": "ALLOW",
+              "reason": "allowed",
+              "count": 116
+            }
+          ],
+          "rateLimited": 0,
+          "shed": 0,
+          "errors": 0,
+          "slaMet": 116,
+          "inFlight": 0,
+          "rps": 13.6,
+          "experimentThroughput": {
+            "incomingPerSec": 23.2,
+            "processedPerSec": 23.2,
+            "rejectedPerSec": 0,
+            "delayedPerSec": 0,
+            "downgradedPerSec": 0
+          },
+          "experiment": {
+            "startedAt": 1791268030923,
+            "endedAt": 1791268039296,
+            "durationSec": 5
+          },
+          "costHistory": [
+            {
+              "timestamp": 1791268030923,
+              "phase": "baseline",
+              "actualCostUsd": 0,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268031948,
+              "phase": "baseline",
+              "actualCostUsd": 0.000026412,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268032952,
+              "phase": "baseline",
+              "actualCostUsd": 0.000064612,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268033967,
+              "phase": "baseline",
+              "actualCostUsd": 0.000093334,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268034978,
+              "phase": "baseline",
+              "actualCostUsd": 0.000130094,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268035990,
+              "phase": "baseline",
+              "actualCostUsd": 0.000158745,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268037013,
+              "phase": "baseline",
+              "actualCostUsd": 0.000182096,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268038034,
+              "phase": "baseline",
+              "actualCostUsd": 0.000209375,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268039063,
+              "phase": "baseline",
+              "actualCostUsd": 0.000237572,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268039296,
+              "phase": "baseline",
+              "actualCostUsd": 0.000245159,
+              "predictedCostUsd": 0
+            }
+          ],
+          "cache": {
+            "hits": 0,
+            "misses": 0,
+            "hitRatio": 0
+          },
+          "latency": {
+            "count": 116,
+            "avg": 46.73,
+            "p50": 50,
+            "p90": 75,
+            "p95": 100,
+            "p99": 150,
+            "max": 110
+          },
+          "utilization": {
+            "cpuPct": 18.2,
+            "rssBytes": 65318912,
+            "avgConcurrency": 1.31,
+            "maxConcurrency": 3,
+            "queueDepth": 0,
+            "queueMax": 0
+          },
+          "cost": {
+            "estimatedCloudCostUsd": 0.000245159,
+            "predictedCloudCostUsd": 0,
+            "costPerSuccessUsd": 0.000002113
+          },
+          "prediction": {
+            "samples": 0,
+            "maeMs": 0,
+            "rmseMs": 0,
+            "mape": 0,
+            "r2": 0
+          },
+          "ml": {
+            "predictionCount": 0,
+            "successCount": 0,
+            "errorCount": 0,
+            "fallbackCount": 0,
+            "serverTimingCount": 0,
+            "predictionThroughputPerSec": 0,
+            "avgLatencyMs": 0,
+            "avgQueueWaitMs": 0,
+            "avgHttpMs": 0,
+            "avgFastapiMs": null,
+            "avgInferenceMs": null,
+            "avgNetworkResidualMs": null,
+            "avgWorkerQueueMs": null
+          }
+        },
+        "failures": []
+      },
+      "predictive": {
+        "elapsedSec": 6.325424200000001,
+        "snapshot": {
+          "name": "predictive",
+          "uptimeMs": 14743,
+          "incoming": 116,
+          "processed": 116,
+          "rejected": 0,
+          "delayed": 0,
+          "downgraded": 0,
+          "allowed": 116,
+          "decisionReasons": [
+            {
+              "decision": "ALLOW",
+              "reason": "cheap_and_budget_ok",
+              "count": 116
+            }
+          ],
+          "rateLimited": 0,
+          "shed": 0,
+          "errors": 0,
+          "slaMet": 116,
+          "inFlight": 0,
+          "rps": 20,
+          "experimentThroughput": {
+            "incomingPerSec": 23.2,
+            "processedPerSec": 23.2,
+            "rejectedPerSec": 0,
+            "delayedPerSec": 0,
+            "downgradedPerSec": 0
+          },
+          "experiment": {
+            "startedAt": 1791268039338,
+            "endedAt": 1791268045664,
+            "durationSec": 5
+          },
+          "costHistory": [
+            {
+              "timestamp": 1791268039338,
+              "phase": "predictive",
+              "actualCostUsd": 0,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268040076,
+              "phase": "predictive",
+              "actualCostUsd": 0.000020149,
+              "predictedCostUsd": 0.000013313
+            },
+            {
+              "timestamp": 1791268041086,
+              "phase": "predictive",
+              "actualCostUsd": 0.000074045,
+              "predictedCostUsd": 0.000049208
+            },
+            {
+              "timestamp": 1791268042107,
+              "phase": "predictive",
+              "actualCostUsd": 0.000120785,
+              "predictedCostUsd": 0.000082486
+            },
+            {
+              "timestamp": 1791268043110,
+              "phase": "predictive",
+              "actualCostUsd": 0.000161576,
+              "predictedCostUsd": 0.000111365
+            },
+            {
+              "timestamp": 1791268044133,
+              "phase": "predictive",
+              "actualCostUsd": 0.000189003,
+              "predictedCostUsd": 0.000132251
+            },
+            {
+              "timestamp": 1791268045147,
+              "phase": "predictive",
+              "actualCostUsd": 0.000231827,
+              "predictedCostUsd": 0.000166134
+            },
+            {
+              "timestamp": 1791268045664,
+              "phase": "predictive",
+              "actualCostUsd": 0.000243629,
+              "predictedCostUsd": 0.000176159
+            }
+          ],
+          "cache": {
+            "hits": 0,
+            "misses": 0,
+            "hitRatio": 0
+          },
+          "latency": {
+            "count": 116,
+            "avg": 90.36,
+            "p50": 100,
+            "p90": 150,
+            "p95": 150,
+            "p99": 250,
+            "max": 244
+          },
+          "utilization": {
+            "cpuPct": 40,
+            "rssBytes": 82059264,
+            "avgConcurrency": 2.47,
+            "maxConcurrency": 5,
+            "queueDepth": 0,
+            "queueMax": 0
+          },
+          "cost": {
+            "estimatedCloudCostUsd": 0.000243629,
+            "predictedCloudCostUsd": 0.000176159,
+            "costPerSuccessUsd": 0.0000021
+          },
+          "prediction": {
+            "samples": 116,
+            "maeMs": 23.265,
+            "rmseMs": 27.497,
+            "mape": 0.4772,
+            "r2": -2.1663
+          },
+          "ml": {
+            "predictionCount": 116,
+            "successCount": 116,
+            "errorCount": 0,
+            "fallbackCount": 0,
+            "serverTimingCount": 116,
+            "predictionThroughputPerSec": 18.654,
+            "avgLatencyMs": 43.899,
+            "avgQueueWaitMs": 3.925,
+            "avgHttpMs": 39.949,
+            "avgFastapiMs": 26.274,
+            "avgInferenceMs": 23.972,
+            "avgNetworkResidualMs": 13.675,
+            "avgWorkerQueueMs": 0.503
+          }
+        },
+        "failures": [],
+        "queue": {
+          "running": 0,
+          "queued": 0,
+          "maxConcurrency": 2,
+          "peakQueued": 2
+        }
+      },
+      "firstPredictionMs": {
+        "min": 13.1,
+        "p50": 19,
+        "p90": 33.86,
+        "p95": 38.48,
+        "p99": 40.68,
+        "max": 41.47
+      },
+      "firstPredictionUsd": {
+        "min": 6.31e-7,
+        "p50": 0.000001503,
+        "p90": 0.000002246,
+        "p95": 0.000002434,
+        "p99": 0.000002512,
+        "max": 0.000002537
+      },
+      "remainingBudgetUsd": {
+        "min": 0.000758771,
+        "p50": 0.0008694110000000001,
+        "p90": 0.000977876,
+        "p95": 0.000990959,
+        "p99": 0.000998066,
+        "max": 0.001
+      },
+      "executionPressureUsedPct": {
+        "min": 0,
+        "p50": 12.5,
+        "p90": 12.5,
+        "p95": 25,
+        "p99": 25,
+        "max": 25
+      },
+      "freshExecutionPressurePct": {
+        "min": 0,
+        "p50": 12.5,
+        "p90": 12.5,
+        "p95": 12.5,
+        "p99": 12.5,
+        "max": 12.5
+      },
+      "maxExecutionActiveUsed": 2,
+      "maxExecutionQueueUsed": 0,
+      "maxFreshExecutionActive": 1,
+      "maxFreshExecutionQueue": 0,
+      "staleStateCount": 51,
+      "expensiveCount": 0,
+      "insufficientBudgetCount": 0,
+      "usedSoftPressureCount": 0,
+      "usedFullConcurrencyCount": 0,
+      "admissionReasons": {
+        "ALLOW:cheap_and_budget_ok": 116
+      },
+      "meanExecutionMs": {
+        "min": 24.374,
+        "p50": 41.915,
+        "p90": 67.815,
+        "p95": 80.327,
+        "p99": 95.61,
+        "max": 113.483
+      },
+      "actualExecutionMeanMs": 46.127853448275864,
+      "validation": {
+        "outcomeCount": 116,
+        "inFlight": 0,
+        "mlSamples": 116,
+        "details": 116,
+        "attemptsWithOutcome": true
+      }
+    },
+    {
+      "profile": "demo",
+      "requests": 588,
+      "admissionAttempts": 588,
+      "baseline": {
+        "elapsedSec": 22.7646909,
+        "snapshot": {
+          "name": "baseline",
+          "uptimeMs": 22765,
+          "incoming": 588,
+          "processed": 588,
+          "rejected": 0,
+          "delayed": 0,
+          "downgraded": 0,
+          "allowed": 588,
+          "decisionReasons": [
+            {
+              "decision": "ALLOW",
+              "reason": "allowed",
+              "count": 588
+            }
+          ],
+          "rateLimited": 0,
+          "shed": 0,
+          "errors": 0,
+          "slaMet": 588,
+          "inFlight": 0,
+          "rps": 26.4,
+          "experimentThroughput": {
+            "incomingPerSec": 117.6,
+            "processedPerSec": 117.6,
+            "rejectedPerSec": 0,
+            "delayedPerSec": 0,
+            "downgradedPerSec": 0
+          },
+          "experiment": {
+            "startedAt": 1791268045700,
+            "endedAt": 1791268068464,
+            "durationSec": 5
+          },
+          "costHistory": [
+            {
+              "timestamp": 1791268045700,
+              "phase": "baseline",
+              "actualCostUsd": 0,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268046709,
+              "phase": "baseline",
+              "actualCostUsd": 0.000058792,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268047721,
+              "phase": "baseline",
+              "actualCostUsd": 0.000123281,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268048724,
+              "phase": "baseline",
+              "actualCostUsd": 0.000194686,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268049750,
+              "phase": "baseline",
+              "actualCostUsd": 0.000250606,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268050757,
+              "phase": "baseline",
+              "actualCostUsd": 0.000317194,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268051780,
+              "phase": "baseline",
+              "actualCostUsd": 0.000380442,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268052807,
+              "phase": "baseline",
+              "actualCostUsd": 0.000444988,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268053825,
+              "phase": "baseline",
+              "actualCostUsd": 0.000517906,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268054841,
+              "phase": "baseline",
+              "actualCostUsd": 0.000581319,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268055879,
+              "phase": "baseline",
+              "actualCostUsd": 0.000647671,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268056898,
+              "phase": "baseline",
+              "actualCostUsd": 0.000710177,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268057909,
+              "phase": "baseline",
+              "actualCostUsd": 0.000784094,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268058922,
+              "phase": "baseline",
+              "actualCostUsd": 0.000848002,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268059944,
+              "phase": "baseline",
+              "actualCostUsd": 0.000919446,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268060989,
+              "phase": "baseline",
+              "actualCostUsd": 0.00098929,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268062001,
+              "phase": "baseline",
+              "actualCostUsd": 0.001049603,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268063003,
+              "phase": "baseline",
+              "actualCostUsd": 0.001103031,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268064006,
+              "phase": "baseline",
+              "actualCostUsd": 0.001163113,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268065064,
+              "phase": "baseline",
+              "actualCostUsd": 0.001237564,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268066106,
+              "phase": "baseline",
+              "actualCostUsd": 0.001302508,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268067139,
+              "phase": "baseline",
+              "actualCostUsd": 0.001365799,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268068167,
+              "phase": "baseline",
+              "actualCostUsd": 0.001417166,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268068464,
+              "phase": "baseline",
+              "actualCostUsd": 0.00143356,
+              "predictedCostUsd": 0
+            }
+          ],
+          "cache": {
+            "hits": 0,
+            "misses": 0,
+            "hitRatio": 0
+          },
+          "latency": {
+            "count": 588,
+            "avg": 59.53,
+            "p50": 75,
+            "p90": 100,
+            "p95": 150,
+            "p99": 150,
+            "max": 167
+          },
+          "utilization": {
+            "cpuPct": 56.3,
+            "rssBytes": 82935808,
+            "avgConcurrency": 1.88,
+            "maxConcurrency": 4,
+            "queueDepth": 0,
+            "queueMax": 0
+          },
+          "cost": {
+            "estimatedCloudCostUsd": 0.00143356,
+            "predictedCloudCostUsd": 0,
+            "costPerSuccessUsd": 0.000002438
+          },
+          "prediction": {
+            "samples": 0,
+            "maeMs": 0,
+            "rmseMs": 0,
+            "mape": 0,
+            "r2": 0
+          },
+          "ml": {
+            "predictionCount": 0,
+            "successCount": 0,
+            "errorCount": 0,
+            "fallbackCount": 0,
+            "serverTimingCount": 0,
+            "predictionThroughputPerSec": 0,
+            "avgLatencyMs": 0,
+            "avgQueueWaitMs": 0,
+            "avgHttpMs": 0,
+            "avgFastapiMs": null,
+            "avgInferenceMs": null,
+            "avgNetworkResidualMs": null,
+            "avgWorkerQueueMs": null
+          }
+        },
+        "failures": []
+      },
+      "predictive": {
+        "elapsedSec": 20.1086152,
+        "snapshot": {
+          "name": "predictive",
+          "uptimeMs": 42906,
+          "incoming": 588,
+          "processed": 588,
+          "rejected": 0,
+          "delayed": 0,
+          "downgraded": 0,
+          "allowed": 588,
+          "decisionReasons": [
+            {
+              "decision": "ALLOW",
+              "reason": "cheap_and_budget_ok",
+              "count": 588
+            }
+          ],
+          "rateLimited": 0,
+          "shed": 0,
+          "errors": 0,
+          "slaMet": 9,
+          "inFlight": 0,
+          "rps": 30.4,
+          "experimentThroughput": {
+            "incomingPerSec": 117.6,
+            "processedPerSec": 117.6,
+            "rejectedPerSec": 0,
+            "delayedPerSec": 0,
+            "downgradedPerSec": 0
+          },
+          "experiment": {
+            "startedAt": 1791268068496,
+            "endedAt": 1791268088605,
+            "durationSec": 5
+          },
+          "costHistory": [
+            {
+              "timestamp": 1791268068496,
+              "phase": "predictive",
+              "actualCostUsd": 0,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268069171,
+              "phase": "predictive",
+              "actualCostUsd": 0.000040046,
+              "predictedCostUsd": 0.000024095
+            },
+            {
+              "timestamp": 1791268070171,
+              "phase": "predictive",
+              "actualCostUsd": 0.00011217,
+              "predictedCostUsd": 0.000072306
+            },
+            {
+              "timestamp": 1791268071193,
+              "phase": "predictive",
+              "actualCostUsd": 0.000176037,
+              "predictedCostUsd": 0.000116115
+            },
+            {
+              "timestamp": 1791268072210,
+              "phase": "predictive",
+              "actualCostUsd": 0.000242996,
+              "predictedCostUsd": 0.000164128
+            },
+            {
+              "timestamp": 1791268073224,
+              "phase": "predictive",
+              "actualCostUsd": 0.000309978,
+              "predictedCostUsd": 0.00021291
+            },
+            {
+              "timestamp": 1791268074242,
+              "phase": "predictive",
+              "actualCostUsd": 0.000374985,
+              "predictedCostUsd": 0.000257079
+            },
+            {
+              "timestamp": 1791268075261,
+              "phase": "predictive",
+              "actualCostUsd": 0.000438014,
+              "predictedCostUsd": 0.000306338
+            },
+            {
+              "timestamp": 1791268076263,
+              "phase": "predictive",
+              "actualCostUsd": 0.000508203,
+              "predictedCostUsd": 0.000355596
+            },
+            {
+              "timestamp": 1791268077278,
+              "phase": "predictive",
+              "actualCostUsd": 0.000576615,
+              "predictedCostUsd": 0.000403095
+            },
+            {
+              "timestamp": 1791268078290,
+              "phase": "predictive",
+              "actualCostUsd": 0.000643119,
+              "predictedCostUsd": 0.0004482
+            },
+            {
+              "timestamp": 1791268079313,
+              "phase": "predictive",
+              "actualCostUsd": 0.000709436,
+              "predictedCostUsd": 0.000494294
+            },
+            {
+              "timestamp": 1791268080318,
+              "phase": "predictive",
+              "actualCostUsd": 0.000775402,
+              "predictedCostUsd": 0.000540104
+            },
+            {
+              "timestamp": 1791268081319,
+              "phase": "predictive",
+              "actualCostUsd": 0.00084346,
+              "predictedCostUsd": 0.000588719
+            },
+            {
+              "timestamp": 1791268082320,
+              "phase": "predictive",
+              "actualCostUsd": 0.000910206,
+              "predictedCostUsd": 0.000633111
+            },
+            {
+              "timestamp": 1791268083330,
+              "phase": "predictive",
+              "actualCostUsd": 0.00097601,
+              "predictedCostUsd": 0.000679564
+            },
+            {
+              "timestamp": 1791268084334,
+              "phase": "predictive",
+              "actualCostUsd": 0.001044798,
+              "predictedCostUsd": 0.000727848
+            },
+            {
+              "timestamp": 1791268085337,
+              "phase": "predictive",
+              "actualCostUsd": 0.001103533,
+              "predictedCostUsd": 0.000768417
+            },
+            {
+              "timestamp": 1791268086349,
+              "phase": "predictive",
+              "actualCostUsd": 0.001175093,
+              "predictedCostUsd": 0.000819696
+            },
+            {
+              "timestamp": 1791268087352,
+              "phase": "predictive",
+              "actualCostUsd": 0.001241988,
+              "predictedCostUsd": 0.000866823
+            },
+            {
+              "timestamp": 1791268088356,
+              "phase": "predictive",
+              "actualCostUsd": 0.001308739,
+              "predictedCostUsd": 0.000911397
+            },
+            {
+              "timestamp": 1791268088605,
+              "phase": "predictive",
+              "actualCostUsd": 0.001323174,
+              "predictedCostUsd": 0.000921494
+            }
+          ],
+          "cache": {
+            "hits": 0,
+            "misses": 0,
+            "hitRatio": 0
+          },
+          "latency": {
+            "count": 588,
+            "avg": 3263.12,
+            "p50": 5000,
+            "p90": 6127,
+            "p95": 6127,
+            "p99": 6127,
+            "max": 6127
+          },
+          "utilization": {
+            "cpuPct": 88.6,
+            "rssBytes": 184188928,
+            "avgConcurrency": 96.86,
+            "maxConcurrency": 186,
+            "queueDepth": 0,
+            "queueMax": 0
+          },
+          "cost": {
+            "estimatedCloudCostUsd": 0.001323174,
+            "predictedCloudCostUsd": 0.000921494,
+            "costPerSuccessUsd": 0.00000225
+          },
+          "prediction": {
+            "samples": 588,
+            "maeMs": 27.328,
+            "rmseMs": 33.135,
+            "mape": 0.4896,
+            "r2": -1.6184
+          },
+          "ml": {
+            "predictionCount": 588,
+            "successCount": 588,
+            "errorCount": 0,
+            "fallbackCount": 0,
+            "serverTimingCount": 588,
+            "predictionThroughputPerSec": 29.356,
+            "avgLatencyMs": 3210.531,
+            "avgQueueWaitMs": 3142.524,
+            "avgHttpMs": 67.994,
+            "avgFastapiMs": 29.348,
+            "avgInferenceMs": 26.697,
+            "avgNetworkResidualMs": 38.646,
+            "avgWorkerQueueMs": 0.646
+          }
+        },
+        "failures": [],
+        "queue": {
+          "running": 0,
+          "queued": 0,
+          "maxConcurrency": 2,
+          "peakQueued": 182
+        }
+      },
+      "firstPredictionMs": {
+        "min": 12.77,
+        "p50": 20.47,
+        "p90": 39.63,
+        "p95": 40.25,
+        "p99": 42.82,
+        "max": 46.22
+      },
+      "firstPredictionUsd": {
+        "min": 5.61e-7,
+        "p50": 0.000001561,
+        "p90": 0.000002233,
+        "p95": 0.000002439,
+        "p99": 0.000002719,
+        "max": 0.0000028
+      },
+      "remainingBudgetUsd": {
+        "min": 0.0003303449999999999,
+        "p50": 0.0003453769999999999,
+        "p90": 0.000860229,
+        "p95": 0.000934342,
+        "p99": 0.000989775,
+        "max": 0.001
+      },
+      "executionPressureUsedPct": {
+        "min": 0,
+        "p50": 12.5,
+        "p90": 25,
+        "p95": 25,
+        "p99": 25,
+        "max": 37.5
+      },
+      "freshExecutionPressurePct": {
+        "min": 0,
+        "p50": 12.5,
+        "p90": 12.5,
+        "p95": 12.5,
+        "p99": 25,
+        "max": 25
+      },
+      "maxExecutionActiveUsed": 3,
+      "maxExecutionQueueUsed": 0,
+      "maxFreshExecutionActive": 2,
+      "maxFreshExecutionQueue": 0,
+      "staleStateCount": 332,
+      "expensiveCount": 0,
+      "insufficientBudgetCount": 0,
+      "usedSoftPressureCount": 0,
+      "usedFullConcurrencyCount": 0,
+      "admissionReasons": {
+        "ALLOW:cheap_and_budget_ok": 588
+      },
+      "meanExecutionMs": {
+        "min": 21.986,
+        "p50": 45.34,
+        "p90": 80.439,
+        "p95": 92.812,
+        "p99": 116.712,
+        "max": 139.6
+      },
+      "actualExecutionMeanMs": 51.9689982993198,
+      "validation": {
+        "outcomeCount": 588,
+        "inFlight": 0,
+        "mlSamples": 588,
+        "details": 588,
+        "attemptsWithOutcome": true
+      }
+    },
+    {
+      "profile": "stress",
+      "requests": 988,
+      "admissionAttempts": 988,
+      "baseline": {
+        "elapsedSec": 38.0906264,
+        "snapshot": {
+          "name": "baseline",
+          "uptimeMs": 38091,
+          "incoming": 988,
+          "processed": 988,
+          "rejected": 0,
+          "delayed": 0,
+          "downgraded": 0,
+          "allowed": 988,
+          "decisionReasons": [
+            {
+              "decision": "ALLOW",
+              "reason": "allowed",
+              "count": 988
+            }
+          ],
+          "rateLimited": 0,
+          "shed": 0,
+          "errors": 0,
+          "slaMet": 988,
+          "inFlight": 0,
+          "rps": 27.8,
+          "experimentThroughput": {
+            "incomingPerSec": 197.6,
+            "processedPerSec": 197.6,
+            "rejectedPerSec": 0,
+            "delayedPerSec": 0,
+            "downgradedPerSec": 0
+          },
+          "experiment": {
+            "startedAt": 1791268088641,
+            "endedAt": 1791268126731,
+            "durationSec": 5
+          },
+          "costHistory": [
+            {
+              "timestamp": 1791268088641,
+              "phase": "baseline",
+              "actualCostUsd": 0,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268089662,
+              "phase": "baseline",
+              "actualCostUsd": 0.000063221,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268090667,
+              "phase": "baseline",
+              "actualCostUsd": 0.00013165,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268091667,
+              "phase": "baseline",
+              "actualCostUsd": 0.000201668,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268092693,
+              "phase": "baseline",
+              "actualCostUsd": 0.000265156,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268093730,
+              "phase": "baseline",
+              "actualCostUsd": 0.000336838,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268094750,
+              "phase": "baseline",
+              "actualCostUsd": 0.000406737,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268095803,
+              "phase": "baseline",
+              "actualCostUsd": 0.000483555,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268096826,
+              "phase": "baseline",
+              "actualCostUsd": 0.000552316,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268097846,
+              "phase": "baseline",
+              "actualCostUsd": 0.00063288,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268098850,
+              "phase": "baseline",
+              "actualCostUsd": 0.000695271,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268099854,
+              "phase": "baseline",
+              "actualCostUsd": 0.00077,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268100871,
+              "phase": "baseline",
+              "actualCostUsd": 0.000841605,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268101907,
+              "phase": "baseline",
+              "actualCostUsd": 0.000910089,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268102936,
+              "phase": "baseline",
+              "actualCostUsd": 0.000993858,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268103972,
+              "phase": "baseline",
+              "actualCostUsd": 0.001064032,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268104979,
+              "phase": "baseline",
+              "actualCostUsd": 0.00112393,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268106034,
+              "phase": "baseline",
+              "actualCostUsd": 0.001182709,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268107041,
+              "phase": "baseline",
+              "actualCostUsd": 0.001250881,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268108057,
+              "phase": "baseline",
+              "actualCostUsd": 0.001323075,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268109084,
+              "phase": "baseline",
+              "actualCostUsd": 0.001390428,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268110095,
+              "phase": "baseline",
+              "actualCostUsd": 0.001450688,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268111127,
+              "phase": "baseline",
+              "actualCostUsd": 0.001519648,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268112150,
+              "phase": "baseline",
+              "actualCostUsd": 0.001579517,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268113222,
+              "phase": "baseline",
+              "actualCostUsd": 0.001657116,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268114273,
+              "phase": "baseline",
+              "actualCostUsd": 0.001720954,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268115341,
+              "phase": "baseline",
+              "actualCostUsd": 0.001810637,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268116341,
+              "phase": "baseline",
+              "actualCostUsd": 0.001880546,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268117379,
+              "phase": "baseline",
+              "actualCostUsd": 0.001948776,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268118398,
+              "phase": "baseline",
+              "actualCostUsd": 0.002018338,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268119424,
+              "phase": "baseline",
+              "actualCostUsd": 0.002080857,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268120433,
+              "phase": "baseline",
+              "actualCostUsd": 0.002143996,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268121453,
+              "phase": "baseline",
+              "actualCostUsd": 0.002214107,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268122472,
+              "phase": "baseline",
+              "actualCostUsd": 0.002279993,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268123528,
+              "phase": "baseline",
+              "actualCostUsd": 0.002348104,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268124542,
+              "phase": "baseline",
+              "actualCostUsd": 0.002428094,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268125577,
+              "phase": "baseline",
+              "actualCostUsd": 0.002502488,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268126591,
+              "phase": "baseline",
+              "actualCostUsd": 0.002569038,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268126731,
+              "phase": "baseline",
+              "actualCostUsd": 0.002582311,
+              "predictedCostUsd": 0
+            }
+          ],
+          "cache": {
+            "hits": 0,
+            "misses": 0,
+            "hitRatio": 0
+          },
+          "latency": {
+            "count": 988,
+            "avg": 66.03,
+            "p50": 75,
+            "p90": 150,
+            "p95": 150,
+            "p99": 250,
+            "max": 193
+          },
+          "utilization": {
+            "cpuPct": 66.3,
+            "rssBytes": 186687488,
+            "avgConcurrency": 2,
+            "maxConcurrency": 4,
+            "queueDepth": 0,
+            "queueMax": 0
+          },
+          "cost": {
+            "estimatedCloudCostUsd": 0.002582311,
+            "predictedCloudCostUsd": 0,
+            "costPerSuccessUsd": 0.000002614
+          },
+          "prediction": {
+            "samples": 0,
+            "maeMs": 0,
+            "rmseMs": 0,
+            "mape": 0,
+            "r2": 0
+          },
+          "ml": {
+            "predictionCount": 0,
+            "successCount": 0,
+            "errorCount": 0,
+            "fallbackCount": 0,
+            "serverTimingCount": 0,
+            "predictionThroughputPerSec": 0,
+            "avgLatencyMs": 0,
+            "avgQueueWaitMs": 0,
+            "avgHttpMs": 0,
+            "avgFastapiMs": null,
+            "avgInferenceMs": null,
+            "avgNetworkResidualMs": null,
+            "avgWorkerQueueMs": null
+          }
+        },
+        "failures": []
+      },
+      "predictive": {
+        "elapsedSec": 34.871871199999994,
+        "snapshot": {
+          "name": "predictive",
+          "uptimeMs": 72991,
+          "incoming": 988,
+          "processed": 988,
+          "rejected": 0,
+          "delayed": 0,
+          "downgraded": 0,
+          "allowed": 988,
+          "decisionReasons": [
+            {
+              "decision": "ALLOW",
+              "reason": "cheap_and_budget_ok",
+              "count": 988
+            }
+          ],
+          "rateLimited": 0,
+          "shed": 0,
+          "errors": 0,
+          "slaMet": 7,
+          "inFlight": 0,
+          "rps": 26.8,
+          "experimentThroughput": {
+            "incomingPerSec": 197.6,
+            "processedPerSec": 197.6,
+            "rejectedPerSec": 0,
+            "delayedPerSec": 0,
+            "downgradedPerSec": 0
+          },
+          "experiment": {
+            "startedAt": 1791268126760,
+            "endedAt": 1791268161631,
+            "durationSec": 5
+          },
+          "costHistory": [
+            {
+              "timestamp": 1791268126760,
+              "phase": "predictive",
+              "actualCostUsd": 0,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268127606,
+              "phase": "predictive",
+              "actualCostUsd": 0.000052499,
+              "predictedCostUsd": 0.000031916
+            },
+            {
+              "timestamp": 1791268128606,
+              "phase": "predictive",
+              "actualCostUsd": 0.000125495,
+              "predictedCostUsd": 0.000078377
+            },
+            {
+              "timestamp": 1791268129616,
+              "phase": "predictive",
+              "actualCostUsd": 0.000189322,
+              "predictedCostUsd": 0.000119119
+            },
+            {
+              "timestamp": 1791268130621,
+              "phase": "predictive",
+              "actualCostUsd": 0.000260767,
+              "predictedCostUsd": 0.000168619
+            },
+            {
+              "timestamp": 1791268131662,
+              "phase": "predictive",
+              "actualCostUsd": 0.000324054,
+              "predictedCostUsd": 0.000212284
+            },
+            {
+              "timestamp": 1791268132670,
+              "phase": "predictive",
+              "actualCostUsd": 0.000392252,
+              "predictedCostUsd": 0.000257869
+            },
+            {
+              "timestamp": 1791268133677,
+              "phase": "predictive",
+              "actualCostUsd": 0.000455043,
+              "predictedCostUsd": 0.000301496
+            },
+            {
+              "timestamp": 1791268134678,
+              "phase": "predictive",
+              "actualCostUsd": 0.00052653,
+              "predictedCostUsd": 0.000350604
+            },
+            {
+              "timestamp": 1791268135691,
+              "phase": "predictive",
+              "actualCostUsd": 0.000594113,
+              "predictedCostUsd": 0.000393945
+            },
+            {
+              "timestamp": 1791268136708,
+              "phase": "predictive",
+              "actualCostUsd": 0.000669592,
+              "predictedCostUsd": 0.000444109
+            },
+            {
+              "timestamp": 1791268137721,
+              "phase": "predictive",
+              "actualCostUsd": 0.000733797,
+              "predictedCostUsd": 0.000486646
+            },
+            {
+              "timestamp": 1791268138738,
+              "phase": "predictive",
+              "actualCostUsd": 0.000800473,
+              "predictedCostUsd": 0.000529633
+            },
+            {
+              "timestamp": 1791268139761,
+              "phase": "predictive",
+              "actualCostUsd": 0.00087371,
+              "predictedCostUsd": 0.00057978
+            },
+            {
+              "timestamp": 1791268140782,
+              "phase": "predictive",
+              "actualCostUsd": 0.000945718,
+              "predictedCostUsd": 0.000625457
+            },
+            {
+              "timestamp": 1791268141789,
+              "phase": "predictive",
+              "actualCostUsd": 0.00100935,
+              "predictedCostUsd": 0.000667577
+            },
+            {
+              "timestamp": 1791268142801,
+              "phase": "predictive",
+              "actualCostUsd": 0.001076073,
+              "predictedCostUsd": 0.000712688
+            },
+            {
+              "timestamp": 1791268143808,
+              "phase": "predictive",
+              "actualCostUsd": 0.001140313,
+              "predictedCostUsd": 0.00075642
+            },
+            {
+              "timestamp": 1791268144822,
+              "phase": "predictive",
+              "actualCostUsd": 0.001208606,
+              "predictedCostUsd": 0.000801676
+            },
+            {
+              "timestamp": 1791268145845,
+              "phase": "predictive",
+              "actualCostUsd": 0.001276568,
+              "predictedCostUsd": 0.000847023
+            },
+            {
+              "timestamp": 1791268146860,
+              "phase": "predictive",
+              "actualCostUsd": 0.001348112,
+              "predictedCostUsd": 0.000892814
+            },
+            {
+              "timestamp": 1791268147883,
+              "phase": "predictive",
+              "actualCostUsd": 0.001419231,
+              "predictedCostUsd": 0.000939363
+            },
+            {
+              "timestamp": 1791268148894,
+              "phase": "predictive",
+              "actualCostUsd": 0.001491284,
+              "predictedCostUsd": 0.000990726
+            },
+            {
+              "timestamp": 1791268149901,
+              "phase": "predictive",
+              "actualCostUsd": 0.001559991,
+              "predictedCostUsd": 0.001034674
+            },
+            {
+              "timestamp": 1791268150902,
+              "phase": "predictive",
+              "actualCostUsd": 0.001631395,
+              "predictedCostUsd": 0.001082427
+            },
+            {
+              "timestamp": 1791268151938,
+              "phase": "predictive",
+              "actualCostUsd": 0.00169278,
+              "predictedCostUsd": 0.001122969
+            },
+            {
+              "timestamp": 1791268152939,
+              "phase": "predictive",
+              "actualCostUsd": 0.001758014,
+              "predictedCostUsd": 0.001166065
+            },
+            {
+              "timestamp": 1791268153958,
+              "phase": "predictive",
+              "actualCostUsd": 0.00182657,
+              "predictedCostUsd": 0.0012133
+            },
+            {
+              "timestamp": 1791268154965,
+              "phase": "predictive",
+              "actualCostUsd": 0.001901809,
+              "predictedCostUsd": 0.001264397
+            },
+            {
+              "timestamp": 1791268155998,
+              "phase": "predictive",
+              "actualCostUsd": 0.001967335,
+              "predictedCostUsd": 0.001307158
+            },
+            {
+              "timestamp": 1791268157032,
+              "phase": "predictive",
+              "actualCostUsd": 0.002016098,
+              "predictedCostUsd": 0.001337574
+            },
+            {
+              "timestamp": 1791268158037,
+              "phase": "predictive",
+              "actualCostUsd": 0.002080164,
+              "predictedCostUsd": 0.001380469
+            },
+            {
+              "timestamp": 1791268159043,
+              "phase": "predictive",
+              "actualCostUsd": 0.002146376,
+              "predictedCostUsd": 0.001425394
+            },
+            {
+              "timestamp": 1791268160051,
+              "phase": "predictive",
+              "actualCostUsd": 0.002221005,
+              "predictedCostUsd": 0.001477401
+            },
+            {
+              "timestamp": 1791268161058,
+              "phase": "predictive",
+              "actualCostUsd": 0.002287567,
+              "predictedCostUsd": 0.001520678
+            },
+            {
+              "timestamp": 1791268161631,
+              "phase": "predictive",
+              "actualCostUsd": 0.002319641,
+              "predictedCostUsd": 0.001543713
+            }
+          ],
+          "cache": {
+            "hits": 0,
+            "misses": 0,
+            "hitRatio": 0
+          },
+          "latency": {
+            "count": 988,
+            "avg": 5886.87,
+            "p50": 12060,
+            "p90": 12060,
+            "p95": 12060,
+            "p99": 12060,
+            "max": 12060
+          },
+          "utilization": {
+            "cpuPct": 86.9,
+            "rssBytes": 289214464,
+            "avgConcurrency": 168.63,
+            "maxConcurrency": 335,
+            "queueDepth": 0,
+            "queueMax": 0
+          },
+          "cost": {
+            "estimatedCloudCostUsd": 0.002319641,
+            "predictedCloudCostUsd": 0.001543713,
+            "costPerSuccessUsd": 0.000002348
+          },
+          "prediction": {
+            "samples": 988,
+            "maeMs": 31.418,
+            "rmseMs": 38.666,
+            "mape": 0.5352,
+            "r2": -1.4879
+          },
+          "ml": {
+            "predictionCount": 988,
+            "successCount": 988,
+            "errorCount": 0,
+            "fallbackCount": 0,
+            "serverTimingCount": 988,
+            "predictionThroughputPerSec": 28.376,
+            "avgLatencyMs": 5831.007,
+            "avgQueueWaitMs": 5760.581,
+            "avgHttpMs": 70.416,
+            "avgFastapiMs": 27.574,
+            "avgInferenceMs": 25.146,
+            "avgNetworkResidualMs": 42.842,
+            "avgWorkerQueueMs": 0.498
+          }
+        },
+        "failures": [],
+        "queue": {
+          "running": 0,
+          "queued": 0,
+          "maxConcurrency": 2,
+          "peakQueued": 331
+        }
+      },
+      "firstPredictionMs": {
+        "min": 12.77,
+        "p50": 18.92,
+        "p90": 39.86,
+        "p95": 40.58,
+        "p99": 41.94,
+        "max": 46.22
+      },
+      "firstPredictionUsd": {
+        "min": 5.58e-7,
+        "p50": 0.000001565,
+        "p90": 0.000002198,
+        "p95": 0.000002433,
+        "p99": 0.000002716,
+        "max": 0.0000028
+      },
+      "remainingBudgetUsd": {
+        "min": 0.00031191699999999977,
+        "p50": 0.0003275050000000002,
+        "p90": 0.000761019,
+        "p95": 0.000874505,
+        "p99": 0.000979787,
+        "max": 0.001
+      },
+      "executionPressureUsedPct": {
+        "min": 0,
+        "p50": 12.5,
+        "p90": 25,
+        "p95": 25,
+        "p99": 25,
+        "max": 37.5
+      },
+      "freshExecutionPressurePct": {
+        "min": 0,
+        "p50": 12.5,
+        "p90": 12.5,
+        "p95": 12.5,
+        "p99": 25,
+        "max": 25
+      },
+      "maxExecutionActiveUsed": 3,
+      "maxExecutionQueueUsed": 0,
+      "maxFreshExecutionActive": 2,
+      "maxFreshExecutionQueue": 0,
+      "staleStateCount": 585,
+      "expensiveCount": 0,
+      "insufficientBudgetCount": 0,
+      "usedSoftPressureCount": 0,
+      "usedFullConcurrencyCount": 0,
+      "admissionReasons": {
+        "ALLOW:cheap_and_budget_ok": 988
+      },
+      "meanExecutionMs": {
+        "min": 22.033,
+        "p50": 47.824,
+        "p90": 80.496,
+        "p95": 95.552,
+        "p99": 159.84,
+        "max": 195.524
+      },
+      "actualExecutionMeanMs": 55.36089473684206,
+      "validation": {
+        "outcomeCount": 988,
+        "inFlight": 0,
+        "mlSamples": 988,
+        "details": 988,
+        "attemptsWithOutcome": true
+      }
+    },
+    {
+      "profile": "burst",
+      "requests": 417,
+      "admissionAttempts": 417,
+      "baseline": {
+        "elapsedSec": 17.86866379999998,
+        "snapshot": {
+          "name": "baseline",
+          "uptimeMs": 17868,
+          "incoming": 417,
+          "processed": 417,
+          "rejected": 0,
+          "delayed": 0,
+          "downgraded": 0,
+          "allowed": 417,
+          "decisionReasons": [
+            {
+              "decision": "ALLOW",
+              "reason": "allowed",
+              "count": 417
+            }
+          ],
+          "rateLimited": 0,
+          "shed": 0,
+          "errors": 0,
+          "slaMet": 417,
+          "inFlight": 0,
+          "rps": 23.6,
+          "experimentThroughput": {
+            "incomingPerSec": 83.4,
+            "processedPerSec": 83.4,
+            "rejectedPerSec": 0,
+            "delayedPerSec": 0,
+            "downgradedPerSec": 0
+          },
+          "experiment": {
+            "startedAt": 1791268161672,
+            "endedAt": 1791268179540,
+            "durationSec": 5
+          },
+          "costHistory": [
+            {
+              "timestamp": 1791268161672,
+              "phase": "baseline",
+              "actualCostUsd": 0,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268162675,
+              "phase": "baseline",
+              "actualCostUsd": 0.000050713,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268163678,
+              "phase": "baseline",
+              "actualCostUsd": 0.00009646,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268164686,
+              "phase": "baseline",
+              "actualCostUsd": 0.000162163,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268165710,
+              "phase": "baseline",
+              "actualCostUsd": 0.000204705,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268166815,
+              "phase": "baseline",
+              "actualCostUsd": 0.000260172,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268167831,
+              "phase": "baseline",
+              "actualCostUsd": 0.000318504,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268168833,
+              "phase": "baseline",
+              "actualCostUsd": 0.000374796,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268169834,
+              "phase": "baseline",
+              "actualCostUsd": 0.000431236,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268170854,
+              "phase": "baseline",
+              "actualCostUsd": 0.000486904,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268171856,
+              "phase": "baseline",
+              "actualCostUsd": 0.000549128,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268172865,
+              "phase": "baseline",
+              "actualCostUsd": 0.000604823,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268173883,
+              "phase": "baseline",
+              "actualCostUsd": 0.000658613,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268174891,
+              "phase": "baseline",
+              "actualCostUsd": 0.000725432,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268175901,
+              "phase": "baseline",
+              "actualCostUsd": 0.000779406,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268176913,
+              "phase": "baseline",
+              "actualCostUsd": 0.00084384,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268177920,
+              "phase": "baseline",
+              "actualCostUsd": 0.000895339,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268178930,
+              "phase": "baseline",
+              "actualCostUsd": 0.000948899,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268179540,
+              "phase": "baseline",
+              "actualCostUsd": 0.000981079,
+              "predictedCostUsd": 0
+            }
+          ],
+          "cache": {
+            "hits": 0,
+            "misses": 0,
+            "hitRatio": 0
+          },
+          "latency": {
+            "count": 417,
+            "avg": 55.6,
+            "p50": 50,
+            "p90": 100,
+            "p95": 100,
+            "p99": 250,
+            "max": 214
+          },
+          "utilization": {
+            "cpuPct": 60.3,
+            "rssBytes": 262115328,
+            "avgConcurrency": 1.77,
+            "maxConcurrency": 4,
+            "queueDepth": 0,
+            "queueMax": 0
+          },
+          "cost": {
+            "estimatedCloudCostUsd": 0.000981079,
+            "predictedCloudCostUsd": 0,
+            "costPerSuccessUsd": 0.000002353
+          },
+          "prediction": {
+            "samples": 0,
+            "maeMs": 0,
+            "rmseMs": 0,
+            "mape": 0,
+            "r2": 0
+          },
+          "ml": {
+            "predictionCount": 0,
+            "successCount": 0,
+            "errorCount": 0,
+            "fallbackCount": 0,
+            "serverTimingCount": 0,
+            "predictionThroughputPerSec": 0,
+            "avgLatencyMs": 0,
+            "avgQueueWaitMs": 0,
+            "avgHttpMs": 0,
+            "avgFastapiMs": null,
+            "avgInferenceMs": null,
+            "avgNetworkResidualMs": null,
+            "avgWorkerQueueMs": null
+          }
+        },
+        "failures": []
+      },
+      "predictive": {
+        "elapsedSec": 14.26011109999998,
+        "snapshot": {
+          "name": "predictive",
+          "uptimeMs": 32159,
+          "incoming": 417,
+          "processed": 417,
+          "rejected": 0,
+          "delayed": 0,
+          "downgraded": 0,
+          "allowed": 417,
+          "decisionReasons": [
+            {
+              "decision": "ALLOW",
+              "reason": "cheap_and_budget_ok",
+              "count": 417
+            }
+          ],
+          "rateLimited": 0,
+          "shed": 0,
+          "errors": 0,
+          "slaMet": 11,
+          "inFlight": 0,
+          "rps": 29.6,
+          "experimentThroughput": {
+            "incomingPerSec": 83.4,
+            "processedPerSec": 83.4,
+            "rejectedPerSec": 0,
+            "delayedPerSec": 0,
+            "downgradedPerSec": 0
+          },
+          "experiment": {
+            "startedAt": 1791268179571,
+            "endedAt": 1791268193831,
+            "durationSec": 5
+          },
+          "costHistory": [
+            {
+              "timestamp": 1791268179571,
+              "phase": "predictive",
+              "actualCostUsd": 0,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268179951,
+              "phase": "predictive",
+              "actualCostUsd": 0.00001407,
+              "predictedCostUsd": 0.000009802
+            },
+            {
+              "timestamp": 1791268180956,
+              "phase": "predictive",
+              "actualCostUsd": 0.000080631,
+              "predictedCostUsd": 0.000053846
+            },
+            {
+              "timestamp": 1791268181964,
+              "phase": "predictive",
+              "actualCostUsd": 0.000150868,
+              "predictedCostUsd": 0.000102101
+            },
+            {
+              "timestamp": 1791268182966,
+              "phase": "predictive",
+              "actualCostUsd": 0.00021888,
+              "predictedCostUsd": 0.000151968
+            },
+            {
+              "timestamp": 1791268183978,
+              "phase": "predictive",
+              "actualCostUsd": 0.000280897,
+              "predictedCostUsd": 0.000195168
+            },
+            {
+              "timestamp": 1791268184994,
+              "phase": "predictive",
+              "actualCostUsd": 0.000347903,
+              "predictedCostUsd": 0.000240073
+            },
+            {
+              "timestamp": 1791268186016,
+              "phase": "predictive",
+              "actualCostUsd": 0.000423049,
+              "predictedCostUsd": 0.000298277
+            },
+            {
+              "timestamp": 1791268187020,
+              "phase": "predictive",
+              "actualCostUsd": 0.000485953,
+              "predictedCostUsd": 0.000341593
+            },
+            {
+              "timestamp": 1791268188072,
+              "phase": "predictive",
+              "actualCostUsd": 0.00055286,
+              "predictedCostUsd": 0.000388527
+            },
+            {
+              "timestamp": 1791268189089,
+              "phase": "predictive",
+              "actualCostUsd": 0.000625282,
+              "predictedCostUsd": 0.000436679
+            },
+            {
+              "timestamp": 1791268190099,
+              "phase": "predictive",
+              "actualCostUsd": 0.000687596,
+              "predictedCostUsd": 0.000483238
+            },
+            {
+              "timestamp": 1791268191108,
+              "phase": "predictive",
+              "actualCostUsd": 0.000751903,
+              "predictedCostUsd": 0.000527508
+            },
+            {
+              "timestamp": 1791268192109,
+              "phase": "predictive",
+              "actualCostUsd": 0.000814118,
+              "predictedCostUsd": 0.000573455
+            },
+            {
+              "timestamp": 1791268193109,
+              "phase": "predictive",
+              "actualCostUsd": 0.000888018,
+              "predictedCostUsd": 0.00062132
+            },
+            {
+              "timestamp": 1791268193831,
+              "phase": "predictive",
+              "actualCostUsd": 0.000931865,
+              "predictedCostUsd": 0.000651773
+            }
+          ],
+          "cache": {
+            "hits": 0,
+            "misses": 0,
+            "hitRatio": 0
+          },
+          "latency": {
+            "count": 417,
+            "avg": 1546.81,
+            "p50": 2000,
+            "p90": 5000,
+            "p95": 5000,
+            "p99": 5000,
+            "max": 3135
+          },
+          "utilization": {
+            "cpuPct": 90.6,
+            "rssBytes": 281694208,
+            "avgConcurrency": 45.79,
+            "maxConcurrency": 96,
+            "queueDepth": 0,
+            "queueMax": 0
+          },
+          "cost": {
+            "estimatedCloudCostUsd": 0.000931865,
+            "predictedCloudCostUsd": 0.000651773,
+            "costPerSuccessUsd": 0.000002235
+          },
+          "prediction": {
+            "samples": 417,
+            "maeMs": 26.871,
+            "rmseMs": 35.435,
+            "mape": 0.4848,
+            "r2": -1.0765
+          },
+          "ml": {
+            "predictionCount": 417,
+            "successCount": 417,
+            "errorCount": 0,
+            "fallbackCount": 0,
+            "serverTimingCount": 417,
+            "predictionThroughputPerSec": 29.407,
+            "avgLatencyMs": 1495.472,
+            "avgQueueWaitMs": 1427.96,
+            "avgHttpMs": 67.502,
+            "avgFastapiMs": 31.003,
+            "avgInferenceMs": 28.045,
+            "avgNetworkResidualMs": 36.499,
+            "avgWorkerQueueMs": 0.733
+          }
+        },
+        "failures": [],
+        "queue": {
+          "running": 0,
+          "queued": 0,
+          "maxConcurrency": 2,
+          "peakQueued": 92
+        }
+      },
+      "firstPredictionMs": {
+        "min": 13.04,
+        "p50": 19.83,
+        "p90": 38.49,
+        "p95": 39.92,
+        "p99": 41.87,
+        "max": 46.22
+      },
+      "firstPredictionUsd": {
+        "min": 5.61e-7,
+        "p50": 0.000001561,
+        "p90": 0.000002228,
+        "p95": 0.000002439,
+        "p99": 0.000002716,
+        "max": 0.000002797
+      },
+      "remainingBudgetUsd": {
+        "min": 0.0003310910000000005,
+        "p50": 0.000541858,
+        "p90": 0.000903014,
+        "p95": 0.000951948,
+        "p99": 0.00099334,
+        "max": 0.001
+      },
+      "executionPressureUsedPct": {
+        "min": 0,
+        "p50": 12.5,
+        "p90": 25,
+        "p95": 25,
+        "p99": 25,
+        "max": 37.5
+      },
+      "freshExecutionPressurePct": {
+        "min": 0,
+        "p50": 12.5,
+        "p90": 12.5,
+        "p95": 12.5,
+        "p99": 25,
+        "max": 25
+      },
+      "maxExecutionActiveUsed": 3,
+      "maxExecutionQueueUsed": 0,
+      "maxFreshExecutionActive": 2,
+      "maxFreshExecutionQueue": 0,
+      "staleStateCount": 232,
+      "expensiveCount": 0,
+      "insufficientBudgetCount": 0,
+      "usedSoftPressureCount": 0,
+      "usedFullConcurrencyCount": 0,
+      "admissionReasons": {
+        "ALLOW:cheap_and_budget_ok": 417
+      },
+      "meanExecutionMs": {
+        "min": 23.194,
+        "p50": 44.022,
+        "p90": 73.806,
+        "p95": 100.894,
+        "p99": 158.584,
+        "max": 198.022
+      },
+      "actualExecutionMeanMs": 50.84420383693044,
+      "validation": {
+        "outcomeCount": 417,
+        "inFlight": 0,
+        "mlSamples": 417,
+        "details": 417,
+        "attemptsWithOutcome": true
+      }
+    },
+    {
+      "profile": "heavy_tail",
+      "requests": 214,
+      "admissionAttempts": 214,
+      "baseline": {
+        "elapsedSec": 12.7155374,
+        "snapshot": {
+          "name": "baseline",
+          "uptimeMs": 12716,
+          "incoming": 214,
+          "processed": 214,
+          "rejected": 0,
+          "delayed": 0,
+          "downgraded": 0,
+          "allowed": 214,
+          "decisionReasons": [
+            {
+              "decision": "ALLOW",
+              "reason": "allowed",
+              "count": 214
+            }
+          ],
+          "rateLimited": 0,
+          "shed": 0,
+          "errors": 0,
+          "slaMet": 214,
+          "inFlight": 0,
+          "rps": 16.4,
+          "experimentThroughput": {
+            "incomingPerSec": 42.8,
+            "processedPerSec": 42.8,
+            "rejectedPerSec": 0,
+            "delayedPerSec": 0,
+            "downgradedPerSec": 0
+          },
+          "experiment": {
+            "startedAt": 1791268193850,
+            "endedAt": 1791268206565,
+            "durationSec": 5
+          },
+          "costHistory": [
+            {
+              "timestamp": 1791268193850,
+              "phase": "baseline",
+              "actualCostUsd": 0,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268194885,
+              "phase": "baseline",
+              "actualCostUsd": 0.000043353,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268195910,
+              "phase": "baseline",
+              "actualCostUsd": 0.000088567,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268196919,
+              "phase": "baseline",
+              "actualCostUsd": 0.00013732,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268197922,
+              "phase": "baseline",
+              "actualCostUsd": 0.000176145,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268198950,
+              "phase": "baseline",
+              "actualCostUsd": 0.00021209,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268199993,
+              "phase": "baseline",
+              "actualCostUsd": 0.000254494,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268201022,
+              "phase": "baseline",
+              "actualCostUsd": 0.000296743,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268202064,
+              "phase": "baseline",
+              "actualCostUsd": 0.000336693,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268203103,
+              "phase": "baseline",
+              "actualCostUsd": 0.000381721,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268204111,
+              "phase": "baseline",
+              "actualCostUsd": 0.000427746,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268205113,
+              "phase": "baseline",
+              "actualCostUsd": 0.000466917,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268206132,
+              "phase": "baseline",
+              "actualCostUsd": 0.000511053,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268206565,
+              "phase": "baseline",
+              "actualCostUsd": 0.000533034,
+              "predictedCostUsd": 0
+            }
+          ],
+          "cache": {
+            "hits": 0,
+            "misses": 0,
+            "hitRatio": 0
+          },
+          "latency": {
+            "count": 214,
+            "avg": 61.67,
+            "p50": 75,
+            "p90": 100,
+            "p95": 150,
+            "p99": 250,
+            "max": 190
+          },
+          "utilization": {
+            "cpuPct": 53.7,
+            "rssBytes": 283557888,
+            "avgConcurrency": 1.53,
+            "maxConcurrency": 4,
+            "queueDepth": 0,
+            "queueMax": 0
+          },
+          "cost": {
+            "estimatedCloudCostUsd": 0.000533034,
+            "predictedCloudCostUsd": 0,
+            "costPerSuccessUsd": 0.000002491
+          },
+          "prediction": {
+            "samples": 0,
+            "maeMs": 0,
+            "rmseMs": 0,
+            "mape": 0,
+            "r2": 0
+          },
+          "ml": {
+            "predictionCount": 0,
+            "successCount": 0,
+            "errorCount": 0,
+            "fallbackCount": 0,
+            "serverTimingCount": 0,
+            "predictionThroughputPerSec": 0,
+            "avgLatencyMs": 0,
+            "avgQueueWaitMs": 0,
+            "avgHttpMs": 0,
+            "avgFastapiMs": null,
+            "avgInferenceMs": null,
+            "avgNetworkResidualMs": null,
+            "avgWorkerQueueMs": null
+          }
+        },
+        "failures": []
+      },
+      "predictive": {
+        "elapsedSec": 9.36287090000001,
+        "snapshot": {
+          "name": "predictive",
+          "uptimeMs": 22110,
+          "incoming": 214,
+          "processed": 214,
+          "rejected": 0,
+          "delayed": 0,
+          "downgraded": 0,
+          "allowed": 214,
+          "decisionReasons": [
+            {
+              "decision": "ALLOW",
+              "reason": "cheap_and_budget_ok",
+              "count": 214
+            }
+          ],
+          "rateLimited": 0,
+          "shed": 0,
+          "errors": 0,
+          "slaMet": 165,
+          "inFlight": 0,
+          "rps": 22.6,
+          "experimentThroughput": {
+            "incomingPerSec": 42.8,
+            "processedPerSec": 42.8,
+            "rejectedPerSec": 0,
+            "delayedPerSec": 0,
+            "downgradedPerSec": 0
+          },
+          "experiment": {
+            "startedAt": 1791268206596,
+            "endedAt": 1791268215959,
+            "durationSec": 5
+          },
+          "costHistory": [
+            {
+              "timestamp": 1791268206596,
+              "phase": "predictive",
+              "actualCostUsd": 0,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268207289,
+              "phase": "predictive",
+              "actualCostUsd": 0.00001709,
+              "predictedCostUsd": 0.000013069
+            },
+            {
+              "timestamp": 1791268208307,
+              "phase": "predictive",
+              "actualCostUsd": 0.000096867,
+              "predictedCostUsd": 0.000060403
+            },
+            {
+              "timestamp": 1791268209328,
+              "phase": "predictive",
+              "actualCostUsd": 0.000160621,
+              "predictedCostUsd": 0.000102892
+            },
+            {
+              "timestamp": 1791268210381,
+              "phase": "predictive",
+              "actualCostUsd": 0.000217475,
+              "predictedCostUsd": 0.000143205
+            },
+            {
+              "timestamp": 1791268211390,
+              "phase": "predictive",
+              "actualCostUsd": 0.000270074,
+              "predictedCostUsd": 0.000181801
+            },
+            {
+              "timestamp": 1791268212408,
+              "phase": "predictive",
+              "actualCostUsd": 0.000320694,
+              "predictedCostUsd": 0.000214601
+            },
+            {
+              "timestamp": 1791268213409,
+              "phase": "predictive",
+              "actualCostUsd": 0.000383316,
+              "predictedCostUsd": 0.000256368
+            },
+            {
+              "timestamp": 1791268214420,
+              "phase": "predictive",
+              "actualCostUsd": 0.000433876,
+              "predictedCostUsd": 0.000293119
+            },
+            {
+              "timestamp": 1791268215462,
+              "phase": "predictive",
+              "actualCostUsd": 0.000484833,
+              "predictedCostUsd": 0.00033016
+            },
+            {
+              "timestamp": 1791268215959,
+              "phase": "predictive",
+              "actualCostUsd": 0.000515214,
+              "predictedCostUsd": 0.000349263
+            }
+          ],
+          "cache": {
+            "hits": 0,
+            "misses": 0,
+            "hitRatio": 0
+          },
+          "latency": {
+            "count": 214,
+            "avg": 226.25,
+            "p50": 250,
+            "p90": 700,
+            "p95": 700,
+            "p99": 700,
+            "max": 727
+          },
+          "utilization": {
+            "cpuPct": 58.5,
+            "rssBytes": 292954112,
+            "avgConcurrency": 5.66,
+            "maxConcurrency": 18,
+            "queueDepth": 0,
+            "queueMax": 0
+          },
+          "cost": {
+            "estimatedCloudCostUsd": 0.000515214,
+            "predictedCloudCostUsd": 0.000349263,
+            "costPerSuccessUsd": 0.000002408
+          },
+          "prediction": {
+            "samples": 214,
+            "maeMs": 31.019,
+            "rmseMs": 41.61,
+            "mape": 0.4846,
+            "r2": -0.8258
+          },
+          "ml": {
+            "predictionCount": 214,
+            "successCount": 214,
+            "errorCount": 0,
+            "fallbackCount": 0,
+            "serverTimingCount": 214,
+            "predictionThroughputPerSec": 23.076,
+            "avgLatencyMs": 167.586,
+            "avgQueueWaitMs": 98.471,
+            "avgHttpMs": 69.106,
+            "avgFastapiMs": 32.153,
+            "avgInferenceMs": 29.649,
+            "avgNetworkResidualMs": 36.953,
+            "avgWorkerQueueMs": 0.541
+          }
+        },
+        "failures": [],
+        "queue": {
+          "running": 0,
+          "queued": 0,
+          "maxConcurrency": 2,
+          "peakQueued": 15
+        }
+      },
+      "firstPredictionMs": {
+        "min": 13.04,
+        "p50": 32.29,
+        "p90": 39.92,
+        "p95": 40.68,
+        "p99": 41.48,
+        "max": 42
+      },
+      "firstPredictionUsd": {
+        "min": 5.73e-7,
+        "p50": 0.000001593,
+        "p90": 0.000002305,
+        "p95": 0.000002478,
+        "p99": 0.000002664,
+        "max": 0.000002716
+      },
+      "remainingBudgetUsd": {
+        "min": 0.0004889840000000001,
+        "p50": 0.0007399349999999999,
+        "p90": 0.000949861,
+        "p95": 0.000972565,
+        "p99": 0.000995904,
+        "max": 0.001
+      },
+      "executionPressureUsedPct": {
+        "min": 0,
+        "p50": 12.5,
+        "p90": 25,
+        "p95": 25,
+        "p99": 25,
+        "max": 25
+      },
+      "freshExecutionPressurePct": {
+        "min": 0,
+        "p50": 12.5,
+        "p90": 12.5,
+        "p95": 12.5,
+        "p99": 12.5,
+        "max": 25
+      },
+      "maxExecutionActiveUsed": 2,
+      "maxExecutionQueueUsed": 0,
+      "maxFreshExecutionActive": 2,
+      "maxFreshExecutionQueue": 0,
+      "staleStateCount": 129,
+      "expensiveCount": 0,
+      "insufficientBudgetCount": 0,
+      "usedSoftPressureCount": 0,
+      "usedFullConcurrencyCount": 0,
+      "admissionReasons": {
+        "ALLOW:cheap_and_budget_ok": 214
+      },
+      "meanExecutionMs": {
+        "min": 22.58,
+        "p50": 49.145,
+        "p90": 84.435,
+        "p95": 120.619,
+        "p99": 178.547,
+        "max": 213.119
+      },
+      "actualExecutionMeanMs": 58.30031775700934,
+      "validation": {
+        "outcomeCount": 214,
+        "inFlight": 0,
+        "mlSamples": 214,
+        "details": 214,
+        "attemptsWithOutcome": true
+      }
+    },
+    {
+      "profile": "overload",
+      "requests": 2424,
+      "admissionAttempts": 2424,
+      "baseline": {
+        "elapsedSec": 92.34873079999998,
+        "snapshot": {
+          "name": "baseline",
+          "uptimeMs": 92349,
+          "incoming": 2424,
+          "processed": 2424,
+          "rejected": 0,
+          "delayed": 0,
+          "downgraded": 0,
+          "allowed": 2424,
+          "decisionReasons": [
+            {
+              "decision": "ALLOW",
+              "reason": "allowed",
+              "count": 2424
+            }
+          ],
+          "rateLimited": 0,
+          "shed": 0,
+          "errors": 0,
+          "slaMet": 2404,
+          "inFlight": 0,
+          "rps": 28.4,
+          "experimentThroughput": {
+            "incomingPerSec": 484.8,
+            "processedPerSec": 484.8,
+            "rejectedPerSec": 0,
+            "delayedPerSec": 0,
+            "downgradedPerSec": 0
+          },
+          "experiment": {
+            "startedAt": 1791268215994,
+            "endedAt": 1791268308343,
+            "durationSec": 5
+          },
+          "costHistory": [
+            {
+              "timestamp": 1791268215994,
+              "phase": "baseline",
+              "actualCostUsd": 0,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268217012,
+              "phase": "baseline",
+              "actualCostUsd": 0.00007018,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268218020,
+              "phase": "baseline",
+              "actualCostUsd": 0.000150219,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268219049,
+              "phase": "baseline",
+              "actualCostUsd": 0.000235496,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268220110,
+              "phase": "baseline",
+              "actualCostUsd": 0.000317237,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268221157,
+              "phase": "baseline",
+              "actualCostUsd": 0.000401578,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268222183,
+              "phase": "baseline",
+              "actualCostUsd": 0.000490383,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268223225,
+              "phase": "baseline",
+              "actualCostUsd": 0.000573689,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268224245,
+              "phase": "baseline",
+              "actualCostUsd": 0.000654527,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268225256,
+              "phase": "baseline",
+              "actualCostUsd": 0.000749422,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268226338,
+              "phase": "baseline",
+              "actualCostUsd": 0.000832734,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268227401,
+              "phase": "baseline",
+              "actualCostUsd": 0.000916577,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268228553,
+              "phase": "baseline",
+              "actualCostUsd": 0.001027227,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268229625,
+              "phase": "baseline",
+              "actualCostUsd": 0.001123846,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268230668,
+              "phase": "baseline",
+              "actualCostUsd": 0.001213351,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268231724,
+              "phase": "baseline",
+              "actualCostUsd": 0.001301835,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268232817,
+              "phase": "baseline",
+              "actualCostUsd": 0.001382532,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268233922,
+              "phase": "baseline",
+              "actualCostUsd": 0.001466626,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268234959,
+              "phase": "baseline",
+              "actualCostUsd": 0.001556483,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268235970,
+              "phase": "baseline",
+              "actualCostUsd": 0.001640225,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268236993,
+              "phase": "baseline",
+              "actualCostUsd": 0.001726881,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268238021,
+              "phase": "baseline",
+              "actualCostUsd": 0.001805735,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268239108,
+              "phase": "baseline",
+              "actualCostUsd": 0.001887635,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268240139,
+              "phase": "baseline",
+              "actualCostUsd": 0.001959987,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268241160,
+              "phase": "baseline",
+              "actualCostUsd": 0.002069214,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268242174,
+              "phase": "baseline",
+              "actualCostUsd": 0.002162025,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268243192,
+              "phase": "baseline",
+              "actualCostUsd": 0.002245293,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268244226,
+              "phase": "baseline",
+              "actualCostUsd": 0.002328354,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268245281,
+              "phase": "baseline",
+              "actualCostUsd": 0.002405004,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268246310,
+              "phase": "baseline",
+              "actualCostUsd": 0.002481953,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268247354,
+              "phase": "baseline",
+              "actualCostUsd": 0.002556318,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268248382,
+              "phase": "baseline",
+              "actualCostUsd": 0.002641408,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268249424,
+              "phase": "baseline",
+              "actualCostUsd": 0.002717594,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268250452,
+              "phase": "baseline",
+              "actualCostUsd": 0.00279739,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268251461,
+              "phase": "baseline",
+              "actualCostUsd": 0.00288459,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268252497,
+              "phase": "baseline",
+              "actualCostUsd": 0.002973916,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268253514,
+              "phase": "baseline",
+              "actualCostUsd": 0.00306284,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268254524,
+              "phase": "baseline",
+              "actualCostUsd": 0.003144229,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268255630,
+              "phase": "baseline",
+              "actualCostUsd": 0.003238268,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268256685,
+              "phase": "baseline",
+              "actualCostUsd": 0.003322272,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268257772,
+              "phase": "baseline",
+              "actualCostUsd": 0.003422901,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268258802,
+              "phase": "baseline",
+              "actualCostUsd": 0.00350009,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268259879,
+              "phase": "baseline",
+              "actualCostUsd": 0.003591146,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268260988,
+              "phase": "baseline",
+              "actualCostUsd": 0.003693554,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268262088,
+              "phase": "baseline",
+              "actualCostUsd": 0.003789612,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268263194,
+              "phase": "baseline",
+              "actualCostUsd": 0.003866187,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268264248,
+              "phase": "baseline",
+              "actualCostUsd": 0.003954927,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268265258,
+              "phase": "baseline",
+              "actualCostUsd": 0.004045248,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268266359,
+              "phase": "baseline",
+              "actualCostUsd": 0.004136702,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268267466,
+              "phase": "baseline",
+              "actualCostUsd": 0.004220626,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268268475,
+              "phase": "baseline",
+              "actualCostUsd": 0.004303608,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268269591,
+              "phase": "baseline",
+              "actualCostUsd": 0.004379055,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268270593,
+              "phase": "baseline",
+              "actualCostUsd": 0.00446699,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268271646,
+              "phase": "baseline",
+              "actualCostUsd": 0.004567013,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268272706,
+              "phase": "baseline",
+              "actualCostUsd": 0.004650576,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268273766,
+              "phase": "baseline",
+              "actualCostUsd": 0.004739695,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268274779,
+              "phase": "baseline",
+              "actualCostUsd": 0.004819628,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268275802,
+              "phase": "baseline",
+              "actualCostUsd": 0.004889665,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268276832,
+              "phase": "baseline",
+              "actualCostUsd": 0.004964798,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268277999,
+              "phase": "baseline",
+              "actualCostUsd": 0.005063031,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268279004,
+              "phase": "baseline",
+              "actualCostUsd": 0.005154902,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268280056,
+              "phase": "baseline",
+              "actualCostUsd": 0.005226235,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268281095,
+              "phase": "baseline",
+              "actualCostUsd": 0.005309229,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268282264,
+              "phase": "baseline",
+              "actualCostUsd": 0.005391454,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268283398,
+              "phase": "baseline",
+              "actualCostUsd": 0.005507666,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268284485,
+              "phase": "baseline",
+              "actualCostUsd": 0.005584907,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268285518,
+              "phase": "baseline",
+              "actualCostUsd": 0.005665994,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268286644,
+              "phase": "baseline",
+              "actualCostUsd": 0.005750073,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268287660,
+              "phase": "baseline",
+              "actualCostUsd": 0.005843849,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268288707,
+              "phase": "baseline",
+              "actualCostUsd": 0.005918574,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268289784,
+              "phase": "baseline",
+              "actualCostUsd": 0.005997501,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268290867,
+              "phase": "baseline",
+              "actualCostUsd": 0.006074405,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268291998,
+              "phase": "baseline",
+              "actualCostUsd": 0.006159352,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268293068,
+              "phase": "baseline",
+              "actualCostUsd": 0.006240911,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268294230,
+              "phase": "baseline",
+              "actualCostUsd": 0.006325984,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268295345,
+              "phase": "baseline",
+              "actualCostUsd": 0.006418484,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268296425,
+              "phase": "baseline",
+              "actualCostUsd": 0.006500781,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268297600,
+              "phase": "baseline",
+              "actualCostUsd": 0.006583389,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268298616,
+              "phase": "baseline",
+              "actualCostUsd": 0.006670913,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268299658,
+              "phase": "baseline",
+              "actualCostUsd": 0.006746314,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268300671,
+              "phase": "baseline",
+              "actualCostUsd": 0.006838224,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268301701,
+              "phase": "baseline",
+              "actualCostUsd": 0.006923231,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268302734,
+              "phase": "baseline",
+              "actualCostUsd": 0.00699961,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268303746,
+              "phase": "baseline",
+              "actualCostUsd": 0.007082271,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268304752,
+              "phase": "baseline",
+              "actualCostUsd": 0.007165852,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268305779,
+              "phase": "baseline",
+              "actualCostUsd": 0.007257438,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268306781,
+              "phase": "baseline",
+              "actualCostUsd": 0.007335592,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268307792,
+              "phase": "baseline",
+              "actualCostUsd": 0.007420643,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268308343,
+              "phase": "baseline",
+              "actualCostUsd": 0.007462264,
+              "predictedCostUsd": 0
+            }
+          ],
+          "cache": {
+            "hits": 0,
+            "misses": 0,
+            "hitRatio": 0
+          },
+          "latency": {
+            "count": 2424,
+            "avg": 84.45,
+            "p50": 75,
+            "p90": 150,
+            "p95": 250,
+            "p99": 250,
+            "max": 322
+          },
+          "utilization": {
+            "cpuPct": 68,
+            "rssBytes": 100757504,
+            "avgConcurrency": 2.46,
+            "maxConcurrency": 6,
+            "queueDepth": 0,
+            "queueMax": 0
+          },
+          "cost": {
+            "estimatedCloudCostUsd": 0.007462264,
+            "predictedCloudCostUsd": 0,
+            "costPerSuccessUsd": 0.000003078
+          },
+          "prediction": {
+            "samples": 0,
+            "maeMs": 0,
+            "rmseMs": 0,
+            "mape": 0,
+            "r2": 0
+          },
+          "ml": {
+            "predictionCount": 0,
+            "successCount": 0,
+            "errorCount": 0,
+            "fallbackCount": 0,
+            "serverTimingCount": 0,
+            "predictionThroughputPerSec": 0,
+            "avgLatencyMs": 0,
+            "avgQueueWaitMs": 0,
+            "avgHttpMs": 0,
+            "avgFastapiMs": null,
+            "avgInferenceMs": null,
+            "avgNetworkResidualMs": null,
+            "avgWorkerQueueMs": null
+          }
+        },
+        "failures": []
+      },
+      "predictive": {
+        "elapsedSec": 85.07192830000002,
+        "snapshot": {
+          "name": "predictive",
+          "uptimeMs": 177457,
+          "incoming": 2424,
+          "processed": 2424,
+          "rejected": 0,
+          "delayed": 0,
+          "downgraded": 0,
+          "allowed": 2424,
+          "decisionReasons": [
+            {
+              "decision": "ALLOW",
+              "reason": "cheap_and_budget_ok",
+              "count": 2424
+            }
+          ],
+          "rateLimited": 0,
+          "shed": 0,
+          "errors": 0,
+          "slaMet": 7,
+          "inFlight": 0,
+          "rps": 27,
+          "experimentThroughput": {
+            "incomingPerSec": 484.8,
+            "processedPerSec": 484.8,
+            "rejectedPerSec": 0,
+            "delayedPerSec": 0,
+            "downgradedPerSec": 0
+          },
+          "experiment": {
+            "startedAt": 1791268308379,
+            "endedAt": 1791268393450,
+            "durationSec": 5
+          },
+          "costHistory": [
+            {
+              "timestamp": 1791268308379,
+              "phase": "predictive",
+              "actualCostUsd": 0,
+              "predictedCostUsd": 0
+            },
+            {
+              "timestamp": 1791268308804,
+              "phase": "predictive",
+              "actualCostUsd": 0.000022352,
+              "predictedCostUsd": 0.000014365
+            },
+            {
+              "timestamp": 1791268309857,
+              "phase": "predictive",
+              "actualCostUsd": 0.000090106,
+              "predictedCostUsd": 0.000057293
+            },
+            {
+              "timestamp": 1791268310890,
+              "phase": "predictive",
+              "actualCostUsd": 0.000163282,
+              "predictedCostUsd": 0.000102956
+            },
+            {
+              "timestamp": 1791268311945,
+              "phase": "predictive",
+              "actualCostUsd": 0.000242521,
+              "predictedCostUsd": 0.000153345
+            },
+            {
+              "timestamp": 1791268312986,
+              "phase": "predictive",
+              "actualCostUsd": 0.000309097,
+              "predictedCostUsd": 0.000197373
+            },
+            {
+              "timestamp": 1791268313993,
+              "phase": "predictive",
+              "actualCostUsd": 0.000374247,
+              "predictedCostUsd": 0.000239595
+            },
+            {
+              "timestamp": 1791268314996,
+              "phase": "predictive",
+              "actualCostUsd": 0.000446639,
+              "predictedCostUsd": 0.000288933
+            },
+            {
+              "timestamp": 1791268316012,
+              "phase": "predictive",
+              "actualCostUsd": 0.000516486,
+              "predictedCostUsd": 0.000334307
+            },
+            {
+              "timestamp": 1791268317033,
+              "phase": "predictive",
+              "actualCostUsd": 0.00059435,
+              "predictedCostUsd": 0.000384665
+            },
+            {
+              "timestamp": 1791268318042,
+              "phase": "predictive",
+              "actualCostUsd": 0.00066761,
+              "predictedCostUsd": 0.000431925
+            },
+            {
+              "timestamp": 1791268319045,
+              "phase": "predictive",
+              "actualCostUsd": 0.000736248,
+              "predictedCostUsd": 0.000476433
+            },
+            {
+              "timestamp": 1791268320063,
+              "phase": "predictive",
+              "actualCostUsd": 0.00080386,
+              "predictedCostUsd": 0.00052301
+            },
+            {
+              "timestamp": 1791268321066,
+              "phase": "predictive",
+              "actualCostUsd": 0.000877398,
+              "predictedCostUsd": 0.000572082
+            },
+            {
+              "timestamp": 1791268322112,
+              "phase": "predictive",
+              "actualCostUsd": 0.000952613,
+              "predictedCostUsd": 0.000620847
+            },
+            {
+              "timestamp": 1791268323125,
+              "phase": "predictive",
+              "actualCostUsd": 0.001021542,
+              "predictedCostUsd": 0.00066625
+            },
+            {
+              "timestamp": 1791268324135,
+              "phase": "predictive",
+              "actualCostUsd": 0.001095451,
+              "predictedCostUsd": 0.000716804
+            },
+            {
+              "timestamp": 1791268325142,
+              "phase": "predictive",
+              "actualCostUsd": 0.001156506,
+              "predictedCostUsd": 0.000756796
+            },
+            {
+              "timestamp": 1791268326158,
+              "phase": "predictive",
+              "actualCostUsd": 0.001228385,
+              "predictedCostUsd": 0.000804445
+            },
+            {
+              "timestamp": 1791268327179,
+              "phase": "predictive",
+              "actualCostUsd": 0.001297148,
+              "predictedCostUsd": 0.000849164
+            },
+            {
+              "timestamp": 1791268328216,
+              "phase": "predictive",
+              "actualCostUsd": 0.001367825,
+              "predictedCostUsd": 0.000895027
+            },
+            {
+              "timestamp": 1791268329231,
+              "phase": "predictive",
+              "actualCostUsd": 0.001446626,
+              "predictedCostUsd": 0.000947619
+            },
+            {
+              "timestamp": 1791268330244,
+              "phase": "predictive",
+              "actualCostUsd": 0.001510698,
+              "predictedCostUsd": 0.000990775
+            },
+            {
+              "timestamp": 1791268331264,
+              "phase": "predictive",
+              "actualCostUsd": 0.001579574,
+              "predictedCostUsd": 0.001034464
+            },
+            {
+              "timestamp": 1791268332283,
+              "phase": "predictive",
+              "actualCostUsd": 0.00164685,
+              "predictedCostUsd": 0.001079158
+            },
+            {
+              "timestamp": 1791268333307,
+              "phase": "predictive",
+              "actualCostUsd": 0.001714311,
+              "predictedCostUsd": 0.001122863
+            },
+            {
+              "timestamp": 1791268334310,
+              "phase": "predictive",
+              "actualCostUsd": 0.001785839,
+              "predictedCostUsd": 0.001168885
+            },
+            {
+              "timestamp": 1791268335314,
+              "phase": "predictive",
+              "actualCostUsd": 0.001854334,
+              "predictedCostUsd": 0.001213012
+            },
+            {
+              "timestamp": 1791268336341,
+              "phase": "predictive",
+              "actualCostUsd": 0.001914977,
+              "predictedCostUsd": 0.001253055
+            },
+            {
+              "timestamp": 1791268337344,
+              "phase": "predictive",
+              "actualCostUsd": 0.001959327,
+              "predictedCostUsd": 0.001283882
+            },
+            {
+              "timestamp": 1791268338374,
+              "phase": "predictive",
+              "actualCostUsd": 0.002024211,
+              "predictedCostUsd": 0.001327151
+            },
+            {
+              "timestamp": 1791268339411,
+              "phase": "predictive",
+              "actualCostUsd": 0.002087817,
+              "predictedCostUsd": 0.001370157
+            },
+            {
+              "timestamp": 1791268340495,
+              "phase": "predictive",
+              "actualCostUsd": 0.002156428,
+              "predictedCostUsd": 0.001416227
+            },
+            {
+              "timestamp": 1791268341525,
+              "phase": "predictive",
+              "actualCostUsd": 0.002231193,
+              "predictedCostUsd": 0.00146616
+            },
+            {
+              "timestamp": 1791268342535,
+              "phase": "predictive",
+              "actualCostUsd": 0.002302686,
+              "predictedCostUsd": 0.001511628
+            },
+            {
+              "timestamp": 1791268343550,
+              "phase": "predictive",
+              "actualCostUsd": 0.002372902,
+              "predictedCostUsd": 0.001557672
+            },
+            {
+              "timestamp": 1791268344556,
+              "phase": "predictive",
+              "actualCostUsd": 0.002444957,
+              "predictedCostUsd": 0.001604801
+            },
+            {
+              "timestamp": 1791268345565,
+              "phase": "predictive",
+              "actualCostUsd": 0.002518737,
+              "predictedCostUsd": 0.001652007
+            },
+            {
+              "timestamp": 1791268346587,
+              "phase": "predictive",
+              "actualCostUsd": 0.002587992,
+              "predictedCostUsd": 0.001697235
+            },
+            {
+              "timestamp": 1791268347616,
+              "phase": "predictive",
+              "actualCostUsd": 0.002658476,
+              "predictedCostUsd": 0.00174092
+            },
+            {
+              "timestamp": 1791268348618,
+              "phase": "predictive",
+              "actualCostUsd": 0.002730786,
+              "predictedCostUsd": 0.001790157
+            },
+            {
+              "timestamp": 1791268349639,
+              "phase": "predictive",
+              "actualCostUsd": 0.002796959,
+              "predictedCostUsd": 0.001833161
+            },
+            {
+              "timestamp": 1791268350672,
+              "phase": "predictive",
+              "actualCostUsd": 0.002858578,
+              "predictedCostUsd": 0.00187524
+            },
+            {
+              "timestamp": 1791268351708,
+              "phase": "predictive",
+              "actualCostUsd": 0.002929083,
+              "predictedCostUsd": 0.001919395
+            },
+            {
+              "timestamp": 1791268352719,
+              "phase": "predictive",
+              "actualCostUsd": 0.003003207,
+              "predictedCostUsd": 0.001967813
+            },
+            {
+              "timestamp": 1791268353726,
+              "phase": "predictive",
+              "actualCostUsd": 0.003078456,
+              "predictedCostUsd": 0.002017002
+            },
+            {
+              "timestamp": 1791268354752,
+              "phase": "predictive",
+              "actualCostUsd": 0.003151789,
+              "predictedCostUsd": 0.002065913
+            },
+            {
+              "timestamp": 1791268355755,
+              "phase": "predictive",
+              "actualCostUsd": 0.003223953,
+              "predictedCostUsd": 0.002115507
+            },
+            {
+              "timestamp": 1791268356779,
+              "phase": "predictive",
+              "actualCostUsd": 0.003288486,
+              "predictedCostUsd": 0.002158173
+            },
+            {
+              "timestamp": 1791268357782,
+              "phase": "predictive",
+              "actualCostUsd": 0.003361237,
+              "predictedCostUsd": 0.002204615
+            },
+            {
+              "timestamp": 1791268358887,
+              "phase": "predictive",
+              "actualCostUsd": 0.003429862,
+              "predictedCostUsd": 0.002247899
+            },
+            {
+              "timestamp": 1791268359900,
+              "phase": "predictive",
+              "actualCostUsd": 0.003498944,
+              "predictedCostUsd": 0.002290933
+            },
+            {
+              "timestamp": 1791268360902,
+              "phase": "predictive",
+              "actualCostUsd": 0.003565907,
+              "predictedCostUsd": 0.002336866
+            },
+            {
+              "timestamp": 1791268361924,
+              "phase": "predictive",
+              "actualCostUsd": 0.003639617,
+              "predictedCostUsd": 0.002383562
+            },
+            {
+              "timestamp": 1791268362944,
+              "phase": "predictive",
+              "actualCostUsd": 0.003710087,
+              "predictedCostUsd": 0.00243061
+            },
+            {
+              "timestamp": 1791268363968,
+              "phase": "predictive",
+              "actualCostUsd": 0.003779315,
+              "predictedCostUsd": 0.002475177
+            },
+            {
+              "timestamp": 1791268364974,
+              "phase": "predictive",
+              "actualCostUsd": 0.003845666,
+              "predictedCostUsd": 0.002516872
+            },
+            {
+              "timestamp": 1791268366001,
+              "phase": "predictive",
+              "actualCostUsd": 0.003918876,
+              "predictedCostUsd": 0.002562789
+            },
+            {
+              "timestamp": 1791268367048,
+              "phase": "predictive",
+              "actualCostUsd": 0.003989415,
+              "predictedCostUsd": 0.002607712
+            },
+            {
+              "timestamp": 1791268368055,
+              "phase": "predictive",
+              "actualCostUsd": 0.004059346,
+              "predictedCostUsd": 0.002655876
+            },
+            {
+              "timestamp": 1791268369058,
+              "phase": "predictive",
+              "actualCostUsd": 0.004128353,
+              "predictedCostUsd": 0.002700493
+            },
+            {
+              "timestamp": 1791268370062,
+              "phase": "predictive",
+              "actualCostUsd": 0.004204641,
+              "predictedCostUsd": 0.002749579
+            },
+            {
+              "timestamp": 1791268371063,
+              "phase": "predictive",
+              "actualCostUsd": 0.004274309,
+              "predictedCostUsd": 0.002792138
+            },
+            {
+              "timestamp": 1791268372073,
+              "phase": "predictive",
+              "actualCostUsd": 0.004345747,
+              "predictedCostUsd": 0.002837577
+            },
+            {
+              "timestamp": 1791268373078,
+              "phase": "predictive",
+              "actualCostUsd": 0.004415421,
+              "predictedCostUsd": 0.002882995
+            },
+            {
+              "timestamp": 1791268374083,
+              "phase": "predictive",
+              "actualCostUsd": 0.004485146,
+              "predictedCostUsd": 0.002926634
+            },
+            {
+              "timestamp": 1791268375105,
+              "phase": "predictive",
+              "actualCostUsd": 0.004554035,
+              "predictedCostUsd": 0.002971435
+            },
+            {
+              "timestamp": 1791268376140,
+              "phase": "predictive",
+              "actualCostUsd": 0.004621077,
+              "predictedCostUsd": 0.003013966
+            },
+            {
+              "timestamp": 1791268377151,
+              "phase": "predictive",
+              "actualCostUsd": 0.004691053,
+              "predictedCostUsd": 0.003056283
+            },
+            {
+              "timestamp": 1791268378161,
+              "phase": "predictive",
+              "actualCostUsd": 0.004762079,
+              "predictedCostUsd": 0.003101796
+            },
+            {
+              "timestamp": 1791268379197,
+              "phase": "predictive",
+              "actualCostUsd": 0.004834851,
+              "predictedCostUsd": 0.003146958
+            },
+            {
+              "timestamp": 1791268380215,
+              "phase": "predictive",
+              "actualCostUsd": 0.004910852,
+              "predictedCostUsd": 0.003198438
+            },
+            {
+              "timestamp": 1791268381216,
+              "phase": "predictive",
+              "actualCostUsd": 0.004988722,
+              "predictedCostUsd": 0.003249422
+            },
+            {
+              "timestamp": 1791268382226,
+              "phase": "predictive",
+              "actualCostUsd": 0.005055605,
+              "predictedCostUsd": 0.003294414
+            },
+            {
+              "timestamp": 1791268383238,
+              "phase": "predictive",
+              "actualCostUsd": 0.005133062,
+              "predictedCostUsd": 0.003344492
+            },
+            {
+              "timestamp": 1791268384337,
+              "phase": "predictive",
+              "actualCostUsd": 0.005209701,
+              "predictedCostUsd": 0.003390862
+            },
+            {
+              "timestamp": 1791268385337,
+              "phase": "predictive",
+              "actualCostUsd": 0.005275335,
+              "predictedCostUsd": 0.003433215
+            },
+            {
+              "timestamp": 1791268386352,
+              "phase": "predictive",
+              "actualCostUsd": 0.005349952,
+              "predictedCostUsd": 0.003481883
+            },
+            {
+              "timestamp": 1791268387355,
+              "phase": "predictive",
+              "actualCostUsd": 0.005418581,
+              "predictedCostUsd": 0.003528964
+            },
+            {
+              "timestamp": 1791268388368,
+              "phase": "predictive",
+              "actualCostUsd": 0.005488525,
+              "predictedCostUsd": 0.00357556
+            },
+            {
+              "timestamp": 1791268389383,
+              "phase": "predictive",
+              "actualCostUsd": 0.005560121,
+              "predictedCostUsd": 0.003623739
+            },
+            {
+              "timestamp": 1791268390386,
+              "phase": "predictive",
+              "actualCostUsd": 0.005632889,
+              "predictedCostUsd": 0.003669367
+            },
+            {
+              "timestamp": 1791268391388,
+              "phase": "predictive",
+              "actualCostUsd": 0.005695641,
+              "predictedCostUsd": 0.003709048
+            },
+            {
+              "timestamp": 1791268392421,
+              "phase": "predictive",
+              "actualCostUsd": 0.005756639,
+              "predictedCostUsd": 0.003746647
+            },
+            {
+              "timestamp": 1791268393435,
+              "phase": "predictive",
+              "actualCostUsd": 0.005827218,
+              "predictedCostUsd": 0.003790612
+            },
+            {
+              "timestamp": 1791268393450,
+              "phase": "predictive",
+              "actualCostUsd": 0.005827218,
+              "predictedCostUsd": 0.003790612
+            }
+          ],
+          "cache": {
+            "hits": 0,
+            "misses": 0,
+            "hitRatio": 0
+          },
+          "latency": {
+            "count": 2424,
+            "avg": 19314.92,
+            "p50": 37872,
+            "p90": 37872,
+            "p95": 37872,
+            "p99": 37872,
+            "max": 37872
+          },
+          "utilization": {
+            "cpuPct": 81.7,
+            "rssBytes": 302292992,
+            "avgConcurrency": 549.43,
+            "maxConcurrency": 1080,
+            "queueDepth": 0,
+            "queueMax": 0
+          },
+          "cost": {
+            "estimatedCloudCostUsd": 0.005827218,
+            "predictedCloudCostUsd": 0.003790612,
+            "costPerSuccessUsd": 0.000002404
+          },
+          "prediction": {
+            "samples": 2424,
+            "maeMs": 33.61,
+            "rmseMs": 39.609,
+            "mape": 0.5633,
+            "r2": -1.7337
+          },
+          "ml": {
+            "predictionCount": 2424,
+            "successCount": 2424,
+            "errorCount": 0,
+            "fallbackCount": 0,
+            "serverTimingCount": 2424,
+            "predictionThroughputPerSec": 28.52,
+            "avgLatencyMs": 19256.86,
+            "avgQueueWaitMs": 19186.769,
+            "avgHttpMs": 70.081,
+            "avgFastapiMs": 25.047,
+            "avgInferenceMs": 22.941,
+            "avgNetworkResidualMs": 45.034,
+            "avgWorkerQueueMs": 0.356
+          }
+        },
+        "failures": [],
+        "queue": {
+          "running": 0,
+          "queued": 0,
+          "maxConcurrency": 2,
+          "peakQueued": 1076
+        }
+      },
+      "firstPredictionMs": {
+        "min": 12.63,
+        "p50": 18.73,
+        "p90": 39.92,
+        "p95": 40.98,
+        "p99": 41.95,
+        "max": 46.23
+      },
+      "firstPredictionUsd": {
+        "min": 5.54e-7,
+        "p50": 0.00000156,
+        "p90": 0.00000223,
+        "p95": 0.000002471,
+        "p99": 0.000002685,
+        "max": 0.000002802
+      },
+      "remainingBudgetUsd": {
+        "min": 0.000278563000000001,
+        "p50": 0.0003095860000000005,
+        "p90": 0.0004143580000000002,
+        "p95": 0.0007014440000000001,
+        "p99": 0.0009425120000000001,
+        "max": 0.001
+      },
+      "executionPressureUsedPct": {
+        "min": 0,
+        "p50": 25,
+        "p90": 25,
+        "p95": 25,
+        "p99": 25,
+        "max": 37.5
+      },
+      "freshExecutionPressurePct": {
+        "min": 0,
+        "p50": 12.5,
+        "p90": 12.5,
+        "p95": 12.5,
+        "p99": 12.5,
+        "max": 25
+      },
+      "maxExecutionActiveUsed": 3,
+      "maxExecutionQueueUsed": 0,
+      "maxFreshExecutionActive": 2,
+      "maxFreshExecutionQueue": 0,
+      "staleStateCount": 1621,
+      "expensiveCount": 0,
+      "insufficientBudgetCount": 0,
+      "usedSoftPressureCount": 0,
+      "usedFullConcurrencyCount": 0,
+      "admissionReasons": {
+        "ALLOW:cheap_and_budget_ok": 2424
+      },
+      "meanExecutionMs": {
+        "min": 21.478,
+        "p50": 52.281,
+        "p90": 84.432,
+        "p95": 97.678,
+        "p99": 152.164,
+        "max": 225.654
+      },
+      "actualExecutionMeanMs": 57.44060231023096,
+      "validation": {
+        "outcomeCount": 2424,
+        "inFlight": 0,
+        "mlSamples": 2424,
+        "details": 2424,
+        "attemptsWithOutcome": true
+      }
+    }
+  ],
+  "mlHealth": {
+    "status": "ok",
+    "service": "ml-cost-predictor",
+    "modelLoaded": true,
+    "modelVersion": "random_forest-v20261005213026"
+  },
+  "sourceHashesAfter": {
+    "backend\\src\\config.js": "859a80e32c4d0edf302884931eaf3291c20105c935df2455fe9855aeffe8d031",
+    "backend\\src\\decision\\cache.js": "48067dcdaee8cc1c1f8eda5ace88bd605fb8a231d612af4db299e3cf472ca044",
+    "backend\\src\\decision\\decisionEngine.js": "87aecd72104d30c5eaefc0cc49cf68e5ec9bb4077e30070ff31781c9528abf10",
+    "backend\\src\\decision\\heuristicPredictor.js": "065d64f882930423a56ce39f940d7345b6ef3de77dadbc9460563a962f00fd4c",
+    "backend\\src\\decision\\limiters.js": "9fb068098bf465fedada35a11c20809b61d5777e306d846c62b877d6fdb476de",
+    "backend\\src\\gateways\\baselineGateway.js": "2fb516f43e111c44f91e7d98d6bd7d26a7fc0bc54cd21ae9fc06ed73f3353a13",
+    "backend\\src\\gateways\\predictiveGateway.js": "4ba72ea866e34ba187918c2b88c39ec3f7d8c9fae316acdfa417e074d7ccea58",
+    "backend\\src\\index.js": "c6c4b81aafb181d3aaced716e3a0799e61f4d598adbef838a86b1f17860e21c8",
+    "backend\\src\\metrics\\costCalculator.js": "8d75eec269af8100e26e36fc8a22f307eb149271bd20bd541bab1142a63e3037",
+    "backend\\src\\metrics\\metricsStore.js": "a45e3a7a2d9a76ec831fd91bba796e4cacd6491b80f51a888b836da3c5f2c8b7",
+    "backend\\src\\ml\\mlClient.js": "a8141184c11fe4574e85bc2764058c5cca61468b6393a29e4aa23423d3f53a54",
+    "backend\\src\\ml\\predictionQueue.js": "2f209a952b2b199ce0699017522206ed2c28e606cafa06814d1dd49d66f7f0b0",
+    "backend\\src\\routes\\execute.js": "2cfa2aea58ed1444aea3be9e5baa2224df0788d43aaeb5340986b6fda5ec13d3",
+    "backend\\src\\routes\\health.js": "169e7684106a7862e184acef7bb1f192d45bff662ac49aacb1502abaa8c68739",
+    "backend\\src\\routes\\metrics.js": "5eb3416b5cfa43b22744736419c12c4dc11b97f6c4ed218706ffafd0b58e2e6c",
+    "backend\\src\\simulator\\distributions.js": "339e2b242fb650b68bddb624f5763a851ba96728c7fed37b39b01b0b935685a2",
+    "backend\\src\\simulator\\simulator.js": "7650a2f9f7f355926a482e90d41d43bda55384efded31e9026c145ea1d83f2c4",
+    "backend\\src\\workload\\executor.js": "fdb94d69b0e2c3f0340eaafa7d1fcd2f34fad28917c24f2caa017a0791c43666",
+    "backend\\src\\workload\\jobs.js": "d866ceb47a12d1b2aa2d2eed2b184500d2cb13131392ebe7f0d5017da40272f1",
+    "frontend\\src\\api\\client.js": "3ba10bc64ffc023f135c6b2462068bb3992ade4e6be84fe7a0cda5e7dcb4a73d",
+    "frontend\\src\\App.css": "d3d113c17500c9030df746d1ee1c12c55b04d3983f9129f7526ea860cd4f18a4",
+    "frontend\\src\\App.jsx": "78da3001f7c09bdec9693017250f888e85311a73d497ab874aa8d66c258f7b6e",
+    "frontend\\src\\assets\\hero.png": "881ffbcaafc212e49addad08846a5b82761355fa20624253af3477ba33262c5c",
+    "frontend\\src\\assets\\react.svg": "35ef61ed53b323ae94a16a8ec659b3d0af3880698791133f23b084085ab1c2e5",
+    "frontend\\src\\assets\\vite.svg": "5be21acd42eb7b896e517f4e0f0f11eb5c5d9e54fbbcebe9453f033008fcca6f",
+    "frontend\\src\\components\\ComparisonChart.jsx": "dced53484bf3b9659b5290b3de53855823440f644bfc47e0d4687658c7520fb6",
+    "frontend\\src\\components\\CostChart.jsx": "24b4f90797be43633f2dfc2ca623b3666984dddeb1267098f9df807c69f21c71",
+    "frontend\\src\\components\\DecisionBreakdown.jsx": "a982efbf470eb18d5ed32c138f43fc850f23315df93c82dd65f1a8e5fb2187ec",
+    "frontend\\src\\components\\MetricCard.jsx": "963512c431f1fd046494f99494cf5e031d3f375f818746ba700cc589cae26a1a",
+    "frontend\\src\\components\\RequestFeed.jsx": "47da46275178634ce8552e665eda56c33141529ca544e41fbc094b1727be57ae",
+    "frontend\\src\\components\\SimulatorControls.jsx": "bca274bba0ea5bce9f66a49eeb4f2c31a6fb931736bb65151c8751d8beb1a333",
+    "frontend\\src\\components\\ThroughputSummary.jsx": "3c2eda99c1c75ae4e4bfd3ab9e672bfe0f8b825942e1e9c934b2d05ef379a1c1",
+    "frontend\\src\\hooks\\useMetrics.js": "cacc5a3b34104b6c24e740fc570ff67f6611cbd7770a8e799888bdb9567ccdcb",
+    "frontend\\src\\index.css": "cf38a807812c6da37f290485637ee8bd61d0c84bafc283099261ee1cda2103aa",
+    "frontend\\src\\main.jsx": "4b4b864dbe45253425d0c925337180ec07e204295179f80f59551216f466f618",
+    "ml-service\\app\\features.py": "0b41284f6f79a1030bd9750c09651d1f5bf015caa031f9fa5795b0c3cd793607",
+    "ml-service\\app\\main.py": "8106092418a3e5f5a2ba7d5e7e86107f7ab3dfdaeb4e279874494fab6e62cf09",
+    "ml-service\\app\\model_registry.py": "fb7bc3a64b348cabb0436fae94dc4597e69c45c254ea1cfb270d01b73053b801",
+    "ml-service\\app\\predictor.py": "566f2cb9e7b918185221120e18f26d36e5e827b0aefd80a01fb305ef2d1c45b8",
+    "ml-service\\app\\schemas.py": "63dda8792652d7373aa3646ea117f29cc3e45d0249e5a4ee3917aebe724eddf0",
+    "ml-service\\app\\timing.py": "35984ab2cf4f4631d343f981dcdd5077e75e71261e2ebf36a6243262363933fb",
+    "ml-service\\models\\model.pkl": "41cedfee1e5828be7f6fb74512ca919d34daf88f3d0fbf69143f9bd2e449224b",
+    "ml-service\\models\\model_meta.json": "22aa352d04627466b99da5e3d9848ed1549f8f825717752d3c1c3f2593742d62",
+    "ml-service\\training\\evaluate.py": "10c3762abb1bd7bb38c08dbe10f69b22ba65e1aa4abe6bb2750d25ea098abffe",
+    "ml-service\\training\\generate_dataset.py": "7aaa7727fcc99055a2962493a72654b7429f7b1ec671155c745ee3b8111feb62",
+    "ml-service\\training\\train.py": "e6cfcd1fe644ab2ffaffd11b32a165cb0f9ea2a61cbe22279e44ef77ee162b63"
+  },
+  "sourcesUnchanged": true,
+  "finishedAt": "2026-10-06T06:33:13.577Z"
+}

@@ -34,7 +34,10 @@ class PredictiveGateway {
     this.mlClient = new MLClient();
 
     // Prediction queue with bounded concurrency
-    this.predictionQueue = new PredictionQueue(config.predictive.mlConcurrency || 4);
+    this.predictionQueue = new PredictionQueue(config.predictive.mlConcurrency || 4, {
+      ...config.predictive.predictionAdmission,
+      onEvent: event => this.metrics.recordPredictionGate(event),
+    });
 
     // Cost prediction + decision
     this.predictor = this._createMLPredictor();
@@ -65,6 +68,7 @@ class PredictiveGateway {
           const queueWaitMs = startedAt - queuedAt;
           try {
             const prediction = await self.mlClient.predict(request, systemState);
+            if (!prediction.fallbackReason) self.predictionQueue.recordHttpSuccess(prediction.timings?.httpMs);
             self.metrics.recordMLPredictionDetail({
               ...prediction.timings,
               totalLatencyMs: performance.now() - queuedAt,
@@ -82,7 +86,7 @@ class PredictiveGateway {
             });
             throw error;
           }
-        });
+        }, { priority: request.priority, requestId: request.requestId });
       },
 
       observe(request, actualWallMs) {
@@ -136,7 +140,7 @@ class PredictiveGateway {
       // Complete this request exactly once, including metrics.begin()'s
       // inFlight increment. ML transport failures remain explicit rejections.
       return this._finish({
-        decision: 'REJECT', reason: 'ml_prediction_failed', status: 503,
+        decision: 'REJECT', reason: error.code === 'PREDICTION_ADMISSION_REJECTED' ? error.reason : 'ml_prediction_failed', status: 503,
         latencyMs: Number(process.hrtime.bigint() - started) / 1e6,
         slaMet: false, predictedCostMs: 0, predictedCostUsd: 0,
       });
@@ -199,7 +203,11 @@ class PredictiveGateway {
           break;
       }
     } catch (err) {
-      if (err.code === 'ML_PREDICTION_FAILED') {
+      if (err.code === 'PREDICTION_ADMISSION_REJECTED') {
+        finalDecision = 'REJECT';
+        finalReason = err.reason;
+        status = 503;
+      } else if (err.code === 'ML_PREDICTION_FAILED') {
         finalDecision = 'REJECT';
         finalReason = 'ml_prediction_failed';
         status = 503;
@@ -273,6 +281,7 @@ class PredictiveGateway {
 
     this.metrics.record({
       decision: outcome.decision,
+      reason: outcome.reason,
       status: outcome.status,
       latencyMs,
       slaMet: outcome.slaMet,

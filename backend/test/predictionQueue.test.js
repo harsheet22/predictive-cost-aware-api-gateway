@@ -2,7 +2,7 @@
 const PredictionQueue = require('../src/ml/predictionQueue');
 
 test('prediction tasks start FIFO, with bounded concurrency; rejection releases a slot', async () => {
-  const queue = new PredictionQueue(2);
+  const queue = new PredictionQueue(2, { normalWaitMs: 10000, highWaitMs: 10000 });
   const starts = [];
   const controls = [];
   let active = 0;
@@ -40,7 +40,7 @@ test('prediction tasks start FIFO, with bounded concurrency; rejection releases 
 });
 
 test('synchronous task errors do not strand following predictions', async () => {
-  const queue = new PredictionQueue(1);
+  const queue = new PredictionQueue(1, { normalWaitMs: 10000, highWaitMs: 10000 });
   const failed = queue.run(() => { throw new Error('sync'); });
   const next = queue.run(() => 42);
   await expect(failed).rejects.toThrow('sync');

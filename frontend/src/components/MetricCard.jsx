@@ -3,7 +3,7 @@ import React from 'react';
 /**
  * MetricCard - displays a single metric with label, value, and optional delta
  */
-export function MetricCard({ label, value, delta, unit = '', className = '' }) {
+export function MetricCard({ label, value, delta, unit = '', className = '', description }) {
   const deltaColor = delta === undefined ? 'gray'
     : delta > 0 ? 'green'
     : delta < 0 ? 'red' : 'gray';
@@ -15,6 +15,7 @@ export function MetricCard({ label, value, delta, unit = '', className = '' }) {
         {value}
         {unit && <span className="metric-unit">{unit}</span>}
       </div>
+      {description && <p className="metric-description">{description}</p>}
       {delta !== undefined && (
         <div className="metric-delta" style={{ color: deltaColor }}>
           {delta > 0 ? '▲' : delta < 0 ? '▼' : '●'} {Math.abs(delta).toFixed(1)}%

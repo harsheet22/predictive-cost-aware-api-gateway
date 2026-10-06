@@ -69,6 +69,11 @@ const config = {
     // Two HTTP slots gave the best measured stress prediction throughput with
     // RF n_jobs=1. FastAPI retains its independent four-worker upper bound.
     mlConcurrency: Number(process.env.ML_CONCURRENCY || 2),
+    predictionAdmission: {
+      maxWaiting: Number(process.env.PREDICTION_MAX_WAITING ?? 4),
+      normalWaitMs: Number(process.env.PREDICTION_NORMAL_WAIT_MS ?? 50),
+      highWaitMs: Number(process.env.PREDICTION_HIGH_WAIT_MS ?? 100),
+    },
 
     budget: {
       windowMs: 10_000,       // rolling budget window
