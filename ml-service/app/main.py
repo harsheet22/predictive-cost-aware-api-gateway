@@ -1,4 +1,5 @@
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Request
+from time import perf_counter
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from typing import Optional
@@ -16,6 +17,7 @@ from app.schemas import (
     HealthResponse,
 )
 from app.predictor import predict, model_info, is_ml_model_loaded
+from app.timing import PredictionTimingMiddleware
 from app.features import cost_tier, estimate_cloud_cost_usd
 from app.model_registry import save_model
 from app.features import get_feature_columns, dataframe_to_features, prepare_target
@@ -65,6 +67,7 @@ app.add_middleware(
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
+app.add_middleware(PredictionTimingMiddleware)
 
 
 # ---- Routes ----
@@ -100,15 +103,21 @@ async def get_model_info():
 
 
 @app.post("/predict", response_model=PredictionResponse)
-async def predict_endpoint(req: PredictionRequest):
+async def predict_endpoint(req: PredictionRequest, request: Request):
     """Predict cost for a single request (runs in thread pool to avoid blocking)."""
     loop = asyncio.get_event_loop()
     request_dict = req.model_dump()
+    timing = {}
+    request.state.prediction_timing = timing
+    submitted = perf_counter()
+
+    def predict_in_worker():
+        timing["workerQueueMs"] = (perf_counter() - submitted) * 1000
+        return predict(request_dict, timing)
     # Run prediction in thread pool to avoid blocking event loop
     result = await loop.run_in_executor(
         app.state.executor,
-        predict,
-        request_dict
+        predict_in_worker,
     )
     return PredictionResponse(**result)
 

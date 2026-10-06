@@ -1,0 +1,50 @@
+[
+  {
+    "n_jobs": -1,
+    "workers": 1,
+    "predictions_per_sec": 30.61,
+    "mean_inference_ms": 32.513
+  },
+  {
+    "n_jobs": -1,
+    "workers": 2,
+    "predictions_per_sec": 35.68,
+    "mean_inference_ms": 55.8
+  },
+  {
+    "n_jobs": -1,
+    "workers": 4,
+    "predictions_per_sec": 36.33,
+    "mean_inference_ms": 109.044
+  },
+  {
+    "n_jobs": -1,
+    "workers": 8,
+    "predictions_per_sec": 34.76,
+    "mean_inference_ms": 223.668
+  },
+  {
+    "n_jobs": 1,
+    "workers": 1,
+    "predictions_per_sec": 95.68,
+    "mean_inference_ms": 9.99
+  },
+  {
+    "n_jobs": 1,
+    "workers": 2,
+    "predictions_per_sec": 88.26,
+    "mean_inference_ms": 22.45
+  },
+  {
+    "n_jobs": 1,
+    "workers": 4,
+    "predictions_per_sec": 80.74,
+    "mean_inference_ms": 48.927
+  },
+  {
+    "n_jobs": 1,
+    "workers": 8,
+    "predictions_per_sec": 79.45,
+    "mean_inference_ms": 97.544
+  }
+]

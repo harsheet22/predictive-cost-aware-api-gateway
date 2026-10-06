@@ -66,8 +66,9 @@ const config = {
   predictive: {
     maxConcurrent: Number(process.env.PREDICTIVE_MAX_CONCURRENT || 8),
     maxQueue: Number(process.env.PREDICTIVE_MAX_QUEUE || 32),
-    // ML prediction concurrency (bounded by ThreadPoolExecutor workers in ML service)
-    mlConcurrency: Number(process.env.ML_CONCURRENCY || 4),
+    // Two HTTP slots gave the best measured stress prediction throughput with
+    // RF n_jobs=1. FastAPI retains its independent four-worker upper bound.
+    mlConcurrency: Number(process.env.ML_CONCURRENCY || 2),
 
     budget: {
       windowMs: 10_000,       // rolling budget window

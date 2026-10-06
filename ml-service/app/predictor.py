@@ -1,4 +1,6 @@
 import numpy as np
+import os
+from time import perf_counter
 import pandas as pd
 from typing import Dict, Any, Optional
 from app.features import (
@@ -21,9 +23,12 @@ def _load():
     global _model, _model_meta
     if _model is None and _model_meta is None:
         _model, _model_meta = load_model()
+        if _model is not None and hasattr(_model, "n_jobs"):
+            # Serving-only setting; never rewrite the saved estimator or retrain it.
+            _model.n_jobs = int(os.environ.get("ML_RF_N_JOBS", "1"))
 
 
-def predict(request: Dict[str, Any]) -> Dict[str, Any]:
+def predict(request: Dict[str, Any], timing: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """
     Predict cost for a single request.
     Returns prediction with fallback to heuristic.
@@ -35,7 +40,12 @@ def predict(request: Dict[str, Any]) -> Dict[str, Any]:
         try:
             features = extract_features(request)
             X = np.array([features[col] for col in _feature_columns]).reshape(1, -1)
-            predicted_ms = float(_model.predict(X)[0])
+            inference_started = perf_counter()
+            try:
+                predicted_ms = float(_model.predict(X)[0])
+            finally:
+                if timing is not None:
+                    timing["inferenceMs"] = (perf_counter() - inference_started) * 1000
             predicted_ms = max(1.0, predicted_ms)  # floor at 1ms
 
             # Confidence from model metadata or default
@@ -46,7 +56,11 @@ def predict(request: Dict[str, Any]) -> Dict[str, Any]:
             return _build_response(request, predicted_ms, confidence, model_version)
         except Exception:
             # Fall through to heuristic
-            pass
+            if timing is not None:
+                timing["fallback"] = "inference_failed"
+
+    elif timing is not None:
+        timing["fallback"] = "model_unavailable"
 
     # Heuristic fallback
     return heuristic_fallback(request)

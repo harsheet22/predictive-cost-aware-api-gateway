@@ -1,0 +1,466 @@
+{
+  "label": "after",
+  "recordedAt": "2026-10-05T21:07:41.030Z",
+  "results": [
+    {
+      "profile": "normal",
+      "durationSec": 5,
+      "seed": 42,
+      "requests": 116,
+      "mlConcurrency": 2,
+      "predictions": 116,
+      "predictionThroughputPerSec": 19.798,
+      "avgQueueWaitMs": 0.474,
+      "avgHttpMs": 14.766,
+      "avgNetworkResidualMs": 3.309,
+      "avgFastapiMs": 11.457,
+      "avgInferenceMs": 10.463,
+      "avgTotalPredictionMs": 15.284,
+      "mlErrorCount": 0,
+      "fallbackCount": 0,
+      "handleFailures": 0,
+      "peakQueued": 2,
+      "elapsedSec": 5.931,
+      "snapshot": {
+        "name": "predictive",
+        "uptimeMs": 5989,
+        "incoming": 116,
+        "processed": 116,
+        "rejected": 0,
+        "delayed": 0,
+        "downgraded": 0,
+        "allowed": 116,
+        "rateLimited": 0,
+        "shed": 0,
+        "errors": 0,
+        "slaMet": 116,
+        "inFlight": 0,
+        "rps": 19.8,
+        "experimentThroughput": {
+          "incomingPerSec": 0,
+          "processedPerSec": 0,
+          "rejectedPerSec": 0,
+          "delayedPerSec": 0,
+          "downgradedPerSec": 0
+        },
+        "cache": {
+          "hits": 0,
+          "misses": 0,
+          "hitRatio": 0
+        },
+        "latency": {
+          "count": 116,
+          "avg": 45.47,
+          "p50": 50,
+          "p90": 75,
+          "p95": 75,
+          "p99": 100,
+          "max": 97
+        },
+        "utilization": {
+          "cpuPct": 29.3,
+          "rssBytes": 78217216,
+          "avgConcurrency": 1.78,
+          "maxConcurrency": 4,
+          "queueDepth": 0,
+          "queueMax": 0
+        },
+        "cost": {
+          "estimatedCloudCostUsd": 0.000197058,
+          "predictedCloudCostUsd": 0.000176159,
+          "costPerSuccessUsd": 0.000001699
+        },
+        "prediction": {
+          "samples": 116,
+          "maeMs": 7.349,
+          "rmseMs": 9.994,
+          "mape": 0.2296,
+          "r2": -0.0101
+        },
+        "ml": {
+          "predictionCount": 116,
+          "successCount": 116,
+          "errorCount": 0,
+          "fallbackCount": 0,
+          "serverTimingCount": 116,
+          "predictionThroughputPerSec": 19.799,
+          "avgLatencyMs": 15.284,
+          "avgQueueWaitMs": 0.474,
+          "avgHttpMs": 14.752,
+          "avgFastapiMs": 11.457,
+          "avgInferenceMs": 10.463,
+          "avgNetworkResidualMs": 3.295,
+          "avgWorkerQueueMs": 0.136
+        }
+      }
+    },
+    {
+      "profile": "demo",
+      "durationSec": 5,
+      "seed": 42,
+      "requests": 588,
+      "mlConcurrency": 2,
+      "predictions": 588,
+      "predictionThroughputPerSec": 56.895,
+      "avgQueueWaitMs": 27.644,
+      "avgHttpMs": 30.926,
+      "avgNetworkResidualMs": 16.592,
+      "avgFastapiMs": 14.335,
+      "avgInferenceMs": 13.11,
+      "avgTotalPredictionMs": 58.573,
+      "mlErrorCount": 0,
+      "fallbackCount": 0,
+      "handleFailures": 0,
+      "peakQueued": 7,
+      "elapsedSec": 10.402,
+      "snapshot": {
+        "name": "predictive",
+        "uptimeMs": 10428,
+        "incoming": 588,
+        "processed": 566,
+        "rejected": 22,
+        "delayed": 0,
+        "downgraded": 12,
+        "allowed": 554,
+        "rateLimited": 22,
+        "shed": 0,
+        "errors": 0,
+        "slaMet": 566,
+        "inFlight": 0,
+        "rps": 60.2,
+        "experimentThroughput": {
+          "incomingPerSec": 0,
+          "processedPerSec": 0,
+          "rejectedPerSec": 0,
+          "delayedPerSec": 0,
+          "downgradedPerSec": 0
+        },
+        "cache": {
+          "hits": 2,
+          "misses": 10,
+          "hitRatio": 0.167
+        },
+        "latency": {
+          "count": 588,
+          "avg": 91.98,
+          "p50": 100,
+          "p90": 150,
+          "p95": 250,
+          "p99": 250,
+          "max": 224
+        },
+        "utilization": {
+          "cpuPct": 58.7,
+          "rssBytes": 156184576,
+          "avgConcurrency": 5.87,
+          "maxConcurrency": 11,
+          "queueDepth": 0,
+          "queueMax": 0
+        },
+        "cost": {
+          "estimatedCloudCostUsd": 0.001023403,
+          "predictedCloudCostUsd": 0.000921494,
+          "costPerSuccessUsd": 0.000001808
+        },
+        "prediction": {
+          "samples": 566,
+          "maeMs": 10.382,
+          "rmseMs": 13.449,
+          "mape": 0.2966,
+          "r2": -0.1336
+        },
+        "ml": {
+          "predictionCount": 588,
+          "successCount": 588,
+          "errorCount": 0,
+          "fallbackCount": 0,
+          "serverTimingCount": 588,
+          "predictionThroughputPerSec": 56.895,
+          "avgLatencyMs": 58.573,
+          "avgQueueWaitMs": 27.644,
+          "avgHttpMs": 30.919,
+          "avgFastapiMs": 14.335,
+          "avgInferenceMs": 13.11,
+          "avgNetworkResidualMs": 16.584,
+          "avgWorkerQueueMs": 0.213
+        }
+      }
+    },
+    {
+      "profile": "stress",
+      "durationSec": 5,
+      "seed": 42,
+      "requests": 988,
+      "mlConcurrency": 2,
+      "predictions": 988,
+      "predictionThroughputPerSec": 58.728,
+      "avgQueueWaitMs": 1023.006,
+      "avgHttpMs": 33.906,
+      "avgNetworkResidualMs": 19.146,
+      "avgFastapiMs": 14.76,
+      "avgInferenceMs": 13.464,
+      "avgTotalPredictionMs": 1056.915,
+      "mlErrorCount": 0,
+      "fallbackCount": 0,
+      "handleFailures": 0,
+      "peakQueued": 133,
+      "elapsedSec": 16.859,
+      "snapshot": {
+        "name": "predictive",
+        "uptimeMs": 16881,
+        "incoming": 988,
+        "processed": 949,
+        "rejected": 39,
+        "delayed": 0,
+        "downgraded": 153,
+        "allowed": 796,
+        "rateLimited": 39,
+        "shed": 0,
+        "errors": 0,
+        "slaMet": 124,
+        "inFlight": 0,
+        "rps": 63.4,
+        "experimentThroughput": {
+          "incomingPerSec": 0,
+          "processedPerSec": 0,
+          "rejectedPerSec": 0,
+          "delayedPerSec": 0,
+          "downgradedPerSec": 0
+        },
+        "cache": {
+          "hits": 71,
+          "misses": 82,
+          "hitRatio": 0.464
+        },
+        "latency": {
+          "count": 988,
+          "avg": 1086.91,
+          "p50": 2000,
+          "p90": 5000,
+          "p95": 5000,
+          "p99": 5000,
+          "max": 2113
+        },
+        "utilization": {
+          "cpuPct": 59,
+          "rssBytes": 243892224,
+          "avgConcurrency": 66,
+          "maxConcurrency": 138,
+          "queueDepth": 0,
+          "queueMax": 0
+        },
+        "cost": {
+          "estimatedCloudCostUsd": 0.001676663,
+          "predictedCloudCostUsd": 0.001543713,
+          "costPerSuccessUsd": 0.000001767
+        },
+        "prediction": {
+          "samples": 949,
+          "maeMs": 11.388,
+          "rmseMs": 15.668,
+          "mape": 0.3636,
+          "r2": -0.0199
+        },
+        "ml": {
+          "predictionCount": 988,
+          "successCount": 988,
+          "errorCount": 0,
+          "fallbackCount": 0,
+          "serverTimingCount": 988,
+          "predictionThroughputPerSec": 58.728,
+          "avgLatencyMs": 1056.915,
+          "avgQueueWaitMs": 1023.006,
+          "avgHttpMs": 33.899,
+          "avgFastapiMs": 14.76,
+          "avgInferenceMs": 13.464,
+          "avgNetworkResidualMs": 19.139,
+          "avgWorkerQueueMs": 0.219
+        }
+      }
+    },
+    {
+      "profile": "burst",
+      "durationSec": 5,
+      "seed": 42,
+      "requests": 417,
+      "mlConcurrency": 2,
+      "predictions": 417,
+      "predictionThroughputPerSec": 46.966,
+      "avgQueueWaitMs": 4.635,
+      "avgHttpMs": 22.56,
+      "avgNetworkResidualMs": 9.351,
+      "avgFastapiMs": 13.209,
+      "avgInferenceMs": 12.112,
+      "avgTotalPredictionMs": 27.198,
+      "mlErrorCount": 0,
+      "fallbackCount": 0,
+      "handleFailures": 0,
+      "peakQueued": 4,
+      "elapsedSec": 8.941,
+      "snapshot": {
+        "name": "predictive",
+        "uptimeMs": 8958,
+        "incoming": 417,
+        "processed": 417,
+        "rejected": 0,
+        "delayed": 0,
+        "downgraded": 0,
+        "allowed": 417,
+        "rateLimited": 0,
+        "shed": 0,
+        "errors": 0,
+        "slaMet": 417,
+        "inFlight": 0,
+        "rps": 47.4,
+        "experimentThroughput": {
+          "incomingPerSec": 0,
+          "processedPerSec": 0,
+          "rejectedPerSec": 0,
+          "delayedPerSec": 0,
+          "downgradedPerSec": 0
+        },
+        "cache": {
+          "hits": 0,
+          "misses": 0,
+          "hitRatio": 0
+        },
+        "latency": {
+          "count": 417,
+          "avg": 60.95,
+          "p50": 75,
+          "p90": 100,
+          "p95": 150,
+          "p99": 150,
+          "max": 146
+        },
+        "utilization": {
+          "cpuPct": 55.4,
+          "rssBytes": 275771392,
+          "avgConcurrency": 3.6,
+          "maxConcurrency": 8,
+          "queueDepth": 0,
+          "queueMax": 0
+        },
+        "cost": {
+          "estimatedCloudCostUsd": 0.000752001,
+          "predictedCloudCostUsd": 0.000651773,
+          "costPerSuccessUsd": 0.000001803
+        },
+        "prediction": {
+          "samples": 417,
+          "maeMs": 9.801,
+          "rmseMs": 15.291,
+          "mape": 0.2611,
+          "r2": 0.0317
+        },
+        "ml": {
+          "predictionCount": 417,
+          "successCount": 417,
+          "errorCount": 0,
+          "fallbackCount": 0,
+          "serverTimingCount": 417,
+          "predictionThroughputPerSec": 46.966,
+          "avgLatencyMs": 27.198,
+          "avgQueueWaitMs": 4.635,
+          "avgHttpMs": 22.552,
+          "avgFastapiMs": 13.209,
+          "avgInferenceMs": 12.112,
+          "avgNetworkResidualMs": 9.343,
+          "avgWorkerQueueMs": 0.156
+        }
+      }
+    },
+    {
+      "profile": "heavy_tail",
+      "durationSec": 5,
+      "seed": 42,
+      "requests": 214,
+      "mlConcurrency": 2,
+      "predictions": 214,
+      "predictionThroughputPerSec": 29.492,
+      "avgQueueWaitMs": 0.833,
+      "avgHttpMs": 15.436,
+      "avgNetworkResidualMs": 4.354,
+      "avgFastapiMs": 11.082,
+      "avgInferenceMs": 10.13,
+      "avgTotalPredictionMs": 16.272,
+      "mlErrorCount": 0,
+      "fallbackCount": 0,
+      "handleFailures": 0,
+      "peakQueued": 3,
+      "elapsedSec": 7.324,
+      "snapshot": {
+        "name": "predictive",
+        "uptimeMs": 7339,
+        "incoming": 214,
+        "processed": 214,
+        "rejected": 0,
+        "delayed": 0,
+        "downgraded": 0,
+        "allowed": 214,
+        "rateLimited": 0,
+        "shed": 0,
+        "errors": 0,
+        "slaMet": 214,
+        "inFlight": 0,
+        "rps": 27.6,
+        "experimentThroughput": {
+          "incomingPerSec": 0,
+          "processedPerSec": 0,
+          "rejectedPerSec": 0,
+          "delayedPerSec": 0,
+          "downgradedPerSec": 0
+        },
+        "cache": {
+          "hits": 0,
+          "misses": 0,
+          "hitRatio": 0
+        },
+        "latency": {
+          "count": 214,
+          "avg": 53.53,
+          "p50": 75,
+          "p90": 100,
+          "p95": 100,
+          "p99": 150,
+          "max": 119
+        },
+        "utilization": {
+          "cpuPct": 57.4,
+          "rssBytes": 261255168,
+          "avgConcurrency": 2.31,
+          "maxConcurrency": 6,
+          "queueDepth": 0,
+          "queueMax": 0
+        },
+        "cost": {
+          "estimatedCloudCostUsd": 0.000402218,
+          "predictedCloudCostUsd": 0.000349263,
+          "costPerSuccessUsd": 0.00000188
+        },
+        "prediction": {
+          "samples": 214,
+          "maeMs": 10.112,
+          "rmseMs": 14.475,
+          "mape": 0.2528,
+          "r2": 0.0548
+        },
+        "ml": {
+          "predictionCount": 214,
+          "successCount": 214,
+          "errorCount": 0,
+          "fallbackCount": 0,
+          "serverTimingCount": 214,
+          "predictionThroughputPerSec": 29.492,
+          "avgLatencyMs": 16.272,
+          "avgQueueWaitMs": 0.833,
+          "avgHttpMs": 15.427,
+          "avgFastapiMs": 11.082,
+          "avgInferenceMs": 10.13,
+          "avgNetworkResidualMs": 4.345,
+          "avgWorkerQueueMs": 0.139
+        }
+      }
+    }
+  ]
+}

@@ -11,6 +11,7 @@
  *   5. Observe actual cost to improve predictions
  */
 const config = require('../config');
+const { performance } = require('perf_hooks');
 const { execute } = require('../workload/executor');
 const { TokenBucket, QueuedConcurrencyGuard, ShedError } = require('../decision/limiters');
 const { DecisionEngine, RollingBudget } = require('../decision/decisionEngine');
@@ -58,43 +59,30 @@ class PredictiveGateway {
     const self = this;
     return {
       async predict(request, systemState) {
-        const overallStartTime = Date.now();
-        
-        // Use prediction queue for bounded concurrency
-        const prediction = await self.predictionQueue.run(async () => {
-          const mlStartTime = Date.now();
+        const queuedAt = performance.now();
+        return self.predictionQueue.run(async () => {
+          const startedAt = performance.now();
+          const queueWaitMs = startedAt - queuedAt;
           try {
             const prediction = await self.mlClient.predict(request, systemState);
-            const mlLatencyMs = Date.now() - mlStartTime;
-            
-            // Record ML-specific latency breakdown
             self.metrics.recordMLPredictionDetail({
-              totalLatencyMs: Date.now() - overallStartTime,
-              mlInferenceMs: mlLatencyMs,
-              queueWaitMs: mlStartTime - overallStartTime,
-              success: true,
+              ...prediction.timings,
+              totalLatencyMs: performance.now() - queuedAt,
+              queueWaitMs,
+              success: !prediction.fallbackReason,
+              fallback: Boolean(prediction.fallbackReason),
             });
-            
-            console.log(`[PredictiveGateway] ML prediction: ${prediction.predictedCostMs}ms, tier=${prediction.costTier}, latency=${mlLatencyMs}ms`);
             return prediction;
           } catch (error) {
-            const mlLatencyMs = Date.now() - mlStartTime;
             self.metrics.recordMLPredictionDetail({
-              totalLatencyMs: Date.now() - overallStartTime,
-              mlInferenceMs: mlLatencyMs,
-              queueWaitMs: mlStartTime - overallStartTime,
+              ...error.timings,
+              totalLatencyMs: performance.now() - queuedAt,
+              queueWaitMs,
               success: false,
             });
-            console.error(`[PredictiveGateway] ML prediction failed for ${request.type}: ${error.message}`);
             throw error;
           }
         });
-        
-        // Record overall prediction latency
-        const totalLatencyMs = Date.now() - overallStartTime;
-        self.metrics.recordMLPrediction(totalLatencyMs, true);
-        
-        return prediction;
       },
 
       observe(request, actualWallMs) {
@@ -141,7 +129,18 @@ class PredictiveGateway {
     };
 
     // Get decision (async)
-    const decision = await this.engine.decide(request, systemState);
+    let decision;
+    try {
+      decision = await this.engine.decide(request, systemState);
+    } catch (error) {
+      // Complete this request exactly once, including metrics.begin()'s
+      // inFlight increment. ML transport failures remain explicit rejections.
+      return this._finish({
+        decision: 'REJECT', reason: 'ml_prediction_failed', status: 503,
+        latencyMs: Number(process.hrtime.bigint() - started) / 1e6,
+        slaMet: false, predictedCostMs: 0, predictedCostUsd: 0,
+      });
+    }
 
     let execution = null;
     let finalDecision = decision.decision;
@@ -200,7 +199,11 @@ class PredictiveGateway {
           break;
       }
     } catch (err) {
-      if (err instanceof ShedError) {
+      if (err.code === 'ML_PREDICTION_FAILED') {
+        finalDecision = 'REJECT';
+        finalReason = 'ml_prediction_failed';
+        status = 503;
+      } else if (err instanceof ShedError) {
         finalDecision = 'REJECT';
         finalReason = 'load_shed';
         status = 503;
@@ -307,6 +310,7 @@ class PredictiveGateway {
 
   stats() {
     return {
+      predictionQueue: this.predictionQueue.stats(),
       rate: { active: this.rate.active, queued: this.rate.queue.length, shed: this.rate.shed },
       budget: { remainingUsd: this.budget.remainingUsd(), utilized: this.budget.utilizationFraction() },
       cache: this.cache.stats(),

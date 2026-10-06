@@ -9,6 +9,7 @@
  * predicted-vs-actual accuracy (MAE/RMSE/MAPE/R2).
  */
 const config = require('../config');
+const { performance } = require('perf_hooks');
 
 const BUCKETS = config.metrics.latencyBucketsMs;
 const BUCKET_COUNT = BUCKETS.length + 1;
@@ -59,7 +60,15 @@ class MetricsStore {
     // ML prediction metrics
     this.mlPredictionCount = 0;
     this.mlPredictionErrors = 0;
-    this.mlPredictionLatencySum = 0;
+    this.mlSuccessCount = 0;
+    this.mlFallbackCount = 0;
+    this.mlHttpLatencySum = 0;
+    this.mlFastapiLatencySum = 0;
+    this.mlNetworkLatencySum = 0;
+    this.mlWorkerQueueSum = 0;
+    this.mlServerTimingCount = 0;
+    this.mlFirstPredictionAt = null;
+    this.mlLastPredictionAt = null;
     
     // Detailed ML latency breakdown
     this.mlInferenceLatencySum = 0;
@@ -134,18 +143,29 @@ class MetricsStore {
 
   /** Record ML prediction metrics (simple). */
   recordMLPrediction(latencyMs, success) {
-    this.mlPredictionCount++;
-    this.mlPredictionLatencySum += latencyMs;
-    if (!success) this.mlPredictionErrors++;
+    this.recordMLPredictionDetail({ totalLatencyMs: latencyMs, success });
   }
 
-  /** Record detailed ML prediction metrics with latency breakdown. */
+  /** One call per attempted prediction, including failed HTTP requests. */
   recordMLPredictionDetail(detail) {
     this.mlPredictionCount++;
+    const completedAt = performance.now();
+    this.mlFirstPredictionAt = Math.min(this.mlFirstPredictionAt ?? Infinity,
+      completedAt - (detail.totalLatencyMs || 0));
+    this.mlLastPredictionAt = completedAt;
     this.mlTotalLatencySum += detail.totalLatencyMs || 0;
-    this.mlInferenceLatencySum += detail.mlInferenceMs || 0;
     this.mlQueueWaitSum += detail.queueWaitMs || 0;
-    if (!detail.success) this.mlPredictionErrors++;
+    this.mlHttpLatencySum += detail.httpMs || 0;
+    if (Number.isFinite(detail.fastapiMs) && Number.isFinite(detail.inferenceMs)) {
+      this.mlServerTimingCount++;
+      this.mlFastapiLatencySum += detail.fastapiMs;
+      this.mlInferenceLatencySum += detail.inferenceMs;
+      this.mlNetworkLatencySum += detail.networkResidualMs || 0;
+      this.mlWorkerQueueSum += detail.workerQueueMs || 0;
+    }
+    if (detail.success) this.mlSuccessCount++;
+    else this.mlPredictionErrors++;
+    if (detail.fallback) this.mlFallbackCount++;
   }
 
   /**
@@ -299,16 +319,21 @@ class MetricsStore {
       // ML prediction metrics
       ml: {
         predictionCount: this.mlPredictionCount,
+        successCount: this.mlSuccessCount,
         errorCount: this.mlPredictionErrors,
-        avgLatencyMs: this.mlPredictionCount > 0
-          ? Number((this.mlTotalLatencySum / this.mlPredictionCount).toFixed(1))
-          : 0,
-        avgInferenceMs: this.mlPredictionCount > 0
-          ? Number((this.mlInferenceLatencySum / this.mlPredictionCount).toFixed(1))
-          : 0,
-        avgQueueWaitMs: this.mlPredictionCount > 0
-          ? Number((this.mlQueueWaitSum / this.mlPredictionCount).toFixed(1))
-          : 0,
+        fallbackCount: this.mlFallbackCount,
+        serverTimingCount: this.mlServerTimingCount,
+        // Completed attempts divided by observed prediction interval, including
+        // queue drain; not configured workload duration or service capacity.
+        predictionThroughputPerSec: this.mlFirstPredictionAt != null && this.mlLastPredictionAt > this.mlFirstPredictionAt
+          ? Number((this.mlPredictionCount * 1000 / (this.mlLastPredictionAt - this.mlFirstPredictionAt)).toFixed(3)) : 0,
+        avgLatencyMs: this.mlPredictionCount ? Number((this.mlTotalLatencySum / this.mlPredictionCount).toFixed(3)) : 0,
+        avgQueueWaitMs: this.mlPredictionCount ? Number((this.mlQueueWaitSum / this.mlPredictionCount).toFixed(3)) : 0,
+        avgHttpMs: this.mlPredictionCount ? Number((this.mlHttpLatencySum / this.mlPredictionCount).toFixed(3)) : 0,
+        avgFastapiMs: this.mlServerTimingCount ? Number((this.mlFastapiLatencySum / this.mlServerTimingCount).toFixed(3)) : null,
+        avgInferenceMs: this.mlServerTimingCount ? Number((this.mlInferenceLatencySum / this.mlServerTimingCount).toFixed(3)) : null,
+        avgNetworkResidualMs: this.mlServerTimingCount ? Number((this.mlNetworkLatencySum / this.mlServerTimingCount).toFixed(3)) : null,
+        avgWorkerQueueMs: this.mlServerTimingCount ? Number((this.mlWorkerQueueSum / this.mlServerTimingCount).toFixed(3)) : null,
       },
     };
   }
