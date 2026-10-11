@@ -11,6 +11,7 @@ from app.features import (
     estimate_cloud_cost_usd,
 )
 from app.model_registry import load_model, get_model_info
+from app.inference import predict_exact
 
 
 _model = None
@@ -42,7 +43,7 @@ def predict(request: Dict[str, Any], timing: Optional[Dict[str, Any]] = None) ->
             X = np.array([features[col] for col in _feature_columns]).reshape(1, -1)
             inference_started = perf_counter()
             try:
-                predicted_ms = float(_model.predict(X)[0])
+                predicted_ms = float(predict_exact(_model, X)[0])
             finally:
                 if timing is not None:
                     timing["inferenceMs"] = (perf_counter() - inference_started) * 1000

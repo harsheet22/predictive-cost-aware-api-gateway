@@ -51,11 +51,51 @@ test('H uses p90, minimum, cold start, latest 100 and rolling 30 seconds', () =>
   now = 30001; expect(queue.estimate()).toMatchObject({ serviceEstimateMs: 100, serviceEstimateSampleCount: 0 });
 });
 
-test('active age floors H and wait formula counts full waves', async () => {
+test('overdue active calls retain conservative age floor instead of estimating zero remaining wait', async () => {
   let now = 0; const q = new PredictionQueue(2, { now: () => now });
   const d = deferred(); const a = q.run(() => d.promise); const b = q.run(() => d.promise);
   await flush(); now = 150; expect(q.estimate()).toMatchObject({ serviceEstimateMs: 150, oldestActiveAgeMs: 150, estimatedWaitMs: 150 });
   d.resolve(); await Promise.all([a,b]);
+});
+
+test('normal requests can wait for nearly finished active calls without changing their 50 ms limit', async () => {
+  let now = 0;
+  const q = new PredictionQueue(2, { now: () => now });
+  const d = deferred(); const starts = [];
+  const a = q.run(() => d.promise); const b = q.run(() => d.promise);
+  await flush(); now = 70;
+  expect(q.estimate()).toMatchObject({ serviceEstimateMs: 100, estimatedWaitMs: 30, activeResidualMs: [30,30] });
+  const c = q.run(() => starts.push('c'));
+  const e = q.run(() => starts.push('e'));
+  await expect(q.run(jest.fn())).rejects.toMatchObject({ reason: 'prediction_wait_limit' });
+  expect(q.stats().queued).toBe(2);
+  now = 100; d.resolve(); await Promise.all([a,b,c,e]);
+  expect(starts).toEqual(['c','e']);
+});
+
+test.each([
+  [0, 20], [1, 80], [2, 120], [3, 180],
+])('FIFO virtual scheduling with asymmetric active ages and %s waiting entries', (depth, expected) => {
+  const q = new PredictionQueue(2, { now: () => 100 });
+  q.active.add({ startedAt: 20 }); q.active.add({ startedAt: 80 }); q.running = 2;
+  q.queue = Array.from({ length: depth }, () => ({}));
+  expect(q.estimate().estimatedWaitMs).toBe(expected);
+});
+
+test('idle capacity remains immediately available despite another overdue prediction', () => {
+  const q = new PredictionQueue(2, { now: () => 200 });
+  q.active.add({ startedAt: 0 }); q.running = 1;
+  expect(q.estimate()).toMatchObject({ serviceEstimateMs: 200, activeResidualMs: [200,0], estimatedWaitMs: 0 });
+});
+
+test('remaining time uses learned p90; all overdue slots remain conservative', () => {
+  let now = 0; const q = new PredictionQueue(2, { now: () => now });
+  for(let i=0;i<10;i++) q.recordHttpSuccess(60);
+  q.active.add({ startedAt: 0 }); q.active.add({ startedAt: 10 }); q.running = 2;
+  now = 40;
+  expect(q.estimate()).toMatchObject({ baseServiceEstimateMs: 60, activeResidualMs: [20,30], estimatedWaitMs: 20 });
+  now = 100;
+  expect(q.estimate()).toMatchObject({ serviceEstimateMs: 100, activeResidualMs: [100,100], estimatedWaitMs: 100 });
 });
 
 test.each([
@@ -69,9 +109,10 @@ test.each([
     gateway.mlClient.predict = jest.fn(async () => prediction);
     gateway.budget.remainingUsd = () => remaining;
     const unchanged = new DecisionEngine({ predict: async () => prediction }, { remainingUsd: () => remaining });
-    const expected = await unchanged.decide(req, state);
+    const candidate = decision === 'DOWNGRADE' ? { ...req, type: 'image_resize', priority: 'low' } : req;
+    const expected = await unchanged.decide(candidate, state);
     expect(expected.decision).toBe(decision);
-    expect(await gateway.engine.decide(req, state)).toEqual(expected);
+    expect(await gateway.engine.decide(candidate, state)).toEqual(expected);
   } finally { clearInterval(metrics._timer); }
 });
 
@@ -139,11 +180,10 @@ test('successful gateway prediction keeps the original DecisionEngine result and
   } finally { clearInterval(metrics._timer); }
 });
 
-test('a gate rejection during existing DELAY re-prediction keeps its explicit reason', async () => {
+test('a gate rejection on initial prediction keeps its explicit reason and balances inFlight', async () => {
   const metrics = new MetricsStore('test'); const gateway = new PredictiveGateway(metrics);
   try {
-    gateway.engine.decide = jest.fn().mockResolvedValueOnce({ decision: 'DELAY', delayMs: 1 })
-      .mockRejectedValueOnce(new PredictionQueue.PredictionAdmissionError('prediction_wait_limit'));
+    gateway.engine.decide = jest.fn().mockRejectedValueOnce(new PredictionQueue.PredictionAdmissionError('prediction_wait_limit'));
     const outcome = await gateway.handle(req);
     expect(outcome.reason).toBe('prediction_wait_limit');
     expect(metrics.snapshot()).toMatchObject({ inFlight: 0, ml: { errorCount: 0 }, prediction: { samples: 0 } });

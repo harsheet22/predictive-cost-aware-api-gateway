@@ -44,7 +44,7 @@ test('HTTP prediction failure completes the gateway request and balances inFligh
     ml: { predictionCount: 1, errorCount: 1 } });
 });
 
-test('failure on re-prediction after DELAY also balances inFlight', async () => {
+test('DELAY reuses a successful prediction even if a later HTTP call would fail', async () => {
   gateway.mlClient.predict = jest.fn().mockResolvedValueOnce(prediction).mockRejectedValueOnce(
     Object.assign(new Error('offline'), { code: 'ML_PREDICTION_FAILED', timings: { httpMs: 5 } }));
   gateway.engine.decide = jest.fn(async req => {
@@ -52,8 +52,9 @@ test('failure on re-prediction after DELAY also balances inFlight', async () => 
     return { decision: 'DELAY', delayMs: 1, predictedCostMs: 30, predictedCloudCostUsd: 0.000001 };
   });
   const result = await gateway.handle(request);
-  expect(result.reason).toBe('ml_prediction_failed');
-  expect(metrics.snapshot()).toMatchObject({ inFlight: 0, rejected: 1, ml: { predictionCount: 2, errorCount: 1 } });
+  expect(result).toMatchObject({ status: 200, decision: 'DELAY', reason: 'budget_or_execution_wait' });
+  expect(gateway.mlClient.predict).toHaveBeenCalledTimes(1);
+  expect(metrics.snapshot()).toMatchObject({ inFlight: 0, processed: 1, rejected: 0, ml: { predictionCount: 1, errorCount: 0 } });
 });
 
 test('service fallback stays usable but is visible in ML error/fallback counters', async () => {

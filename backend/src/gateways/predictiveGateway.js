@@ -18,11 +18,14 @@ const { DecisionEngine, RollingBudget } = require('../decision/decisionEngine');
 const MLClient = require('../ml/mlClient');
 const LRUCache = require('../decision/cache');
 const PredictionQueue = require('../ml/predictionQueue');
+const HashPrefixCache = require('../workload/hashPrefixCache');
+const BudgetWaitQueue = require('../decision/budgetWaitQueue');
 
 class PredictiveGateway {
   constructor(metrics) {
     this.name = 'predictive';
     this.metrics = metrics;
+    this.hashPrefixCache = config.predictive.optimization.hashPrefixReuse ? new HashPrefixCache() : null;
 
     // Admission control
     this.rate = new QueuedConcurrencyGuard({
@@ -46,6 +49,10 @@ class PredictiveGateway {
       config.predictive.budget.usdPerWindow,
     );
     this.engine = new DecisionEngine(this.predictor, this.budget);
+    this.budgetWaitQueue = new BudgetWaitQueue({
+      maxWaiting: config.predictive.predictionAdmission.maxWaiting || 1,
+      maxWaitMs: config.predictive.predictionAdmission.normalWaitMs,
+    });
 
     // Cache for downgraded results
     this.cache = new LRUCache(config.predictive.cache);
@@ -136,6 +143,7 @@ class PredictiveGateway {
     let decision;
     try {
       decision = await this.engine.decide(request, systemState);
+      this.metrics.recordInitialDecision(decision);
     } catch (error) {
       // Complete this request exactly once, including metrics.begin()'s
       // inFlight increment. ML transport failures remain explicit rejections.
@@ -157,12 +165,28 @@ class PredictiveGateway {
     const cacheKey = this._cacheKey(request);
 
     try {
+      const fitsFreshBudget = decision.predictedCloudCostUsd <= this.budget.usdPerWindow * config.predictive.budget.cheapShare ||
+        (request.priority === 'high' && decision.predictedCloudCostUsd < this.budget.usdPerWindow) ||
+        (this.engine._canDowngrade(request) && this.engine._predictCost(decision.predictedCostMs * config.predictive.downgrade.cpuFactor, request.payloadSize) < this.budget.usdPerWindow);
+      if (fitsFreshBudget && ((decision.decision === 'REJECT' && decision.reason === 'budget_exceeded') || this.budgetWaitQueue.queue.length)) {
+        const savedPrediction = decision;
+        const admission = await this.budgetWaitQueue.run(() => this.engine.decidePrediction(request, this._executionState(), savedPrediction));
+        decision = admission.decision;
+        delayMs = admission.waitMs;
+        finalDecision = decision.decision;
+        finalReason = decision.reason;
+      }
       switch (decision.decision) {
         case 'ALLOW':
           execution = await this._executeWithQueue(request, 'full');
           break;
 
         case 'DOWNGRADE': {
+          if (decision.reason === 'low_priority_reduced_quality') {
+            // Fresh I/O per request; exact CPU reuse is independent of response caching.
+            execution = await this._executeWithQueue(request, 'reduced');
+            break;
+          }
           // Check cache first
           const cached = this.cache.get(cacheKey);
           if (cached) {
@@ -180,10 +204,16 @@ class PredictiveGateway {
         }
 
         case 'DELAY': {
-          delayMs = decision.delayMs || config.predictive.delay.maxWaitMs;
-          await new Promise(r => setTimeout(r, delayMs));
+          const executionDelayMs = decision.delayMs || config.predictive.delay.maxWaitMs;
+          delayMs += executionDelayMs;
+          await new Promise(r => setTimeout(r, executionDelayMs));
           // Re-evaluate after delay
-          const reDecision = await this.engine.decide(request, systemState);
+          let reDecision = this.engine.decidePrediction(request, this._executionState(), decision);
+          if (fitsFreshBudget && reDecision.decision === 'REJECT' && reDecision.reason === 'budget_exceeded') {
+            const admission = await this.budgetWaitQueue.run(() => this.engine.decidePrediction(request, this._executionState(), decision));
+            delayMs += admission.waitMs;
+            reDecision = admission.decision;
+          }
           if (reDecision.decision === 'REJECT') {
             finalDecision = 'REJECT';
             finalReason = 'delayed_then_rejected';
@@ -203,7 +233,7 @@ class PredictiveGateway {
           break;
       }
     } catch (err) {
-      if (err.code === 'PREDICTION_ADMISSION_REJECTED') {
+      if (err.code === 'PREDICTION_ADMISSION_REJECTED' || err.code === 'BUDGET_WAIT_REJECTED') {
         finalDecision = 'REJECT';
         finalReason = err.reason;
         status = 503;
@@ -223,6 +253,10 @@ class PredictiveGateway {
     }
 
     const latencyMs = Number(process.hrtime.bigint() - started) / 1e6;
+    if (delayMs > 0 && finalDecision === 'ALLOW') {
+      finalDecision = 'DELAY';
+      finalReason = 'budget_or_execution_wait';
+    }
     const slaMet = status === 200 && latencyMs <= config.sla.targetLatencyMs;
 
     // Record actual cost for learning
@@ -232,6 +266,7 @@ class PredictiveGateway {
 
     const result = {
       decision: finalDecision,
+      decisionEngineReached: true,
       reason: finalReason,
       status,
       latencyMs,
@@ -243,6 +278,10 @@ class PredictiveGateway {
       delayMs,
       precision: execution ? execution.precision : precision,
       cached: execution ? execution.cached : false,
+      optimization: execution ? {
+        cpuIterationsExecuted: execution.cpuIterationsExecuted || 0,
+        cpuIterationsReused: execution.cpuIterationsReused || 0,
+      } : null,
     };
 
     return this._finish(result);
@@ -262,6 +301,7 @@ class PredictiveGateway {
       precision,
       cpuFactor: precision === 'reduced' ? config.predictive.downgrade.cpuFactor : 1,
       ioFactor: precision === 'reduced' ? config.predictive.downgrade.ioFactor : 1,
+      hashPrefixCache: this.hashPrefixCache,
     });
 
     return this.rate.run(execPromise);
@@ -289,6 +329,9 @@ class PredictiveGateway {
       actualCostUsd,
       predictedCostMs,
       predictedCostUsd,
+      decisionEngineReached: outcome.decisionEngineReached,
+      precision: outcome.precision,
+      cached: outcome.cached,
     });
 
     return {
@@ -307,6 +350,7 @@ class PredictiveGateway {
       delayMs: outcome.delayMs || 0,
       precision: outcome.precision || 'full',
       cached: outcome.cached || false,
+      optimization: outcome.optimization || null,
     };
   }
 
@@ -317,6 +361,11 @@ class PredictiveGateway {
     }
   }
 
+  _executionState() {
+    return { concurrent: this.rate.active, queueDepth: this.rate.queue.length,
+      cpuPct: Math.max(this.rate.active / config.predictive.maxConcurrent, this.rate.queue.length / config.predictive.maxQueue) * 100 };
+  }
+
   stats() {
     return {
       predictionQueue: this.predictionQueue.stats(),
@@ -324,6 +373,8 @@ class PredictiveGateway {
       budget: { remainingUsd: this.budget.remainingUsd(), utilized: this.budget.utilizationFraction() },
       cache: this.cache.stats(),
       predictor: this.predictor.medians(),
+      cpuReuse: this.hashPrefixCache ? this.hashPrefixCache.stats() : null,
+      budgetWaitQueue: this.budgetWaitQueue.stats(),
     };
   }
 }

@@ -73,6 +73,7 @@ app.post('/api/compare/run', async (req, res) => {
 
   // Generate the identical request stream for both runs
   const requests = generateRequests({ profile, durationSec, seed });
+  const runId = `cmp-${Date.now()}-${require('crypto').randomUUID()}`;
 
   // Reset metrics
   baselineMetrics.reset();
@@ -82,7 +83,7 @@ app.post('/api/compare/run', async (req, res) => {
   const runGateway = async (gateway, name) => {
     const pending = new Set();
     await replay(requests, (request) => {
-      const p = gateway.handle(request).catch(() => {});
+      const p = gateway.handle(request).catch(error => failures[name].push({ requestId: request.requestId, message: error.message }));
       pending.add(p);
       p.finally(() => pending.delete(p));
     });
@@ -96,10 +97,11 @@ app.post('/api/compare/run', async (req, res) => {
 
   // Sequential runs for isolation (avoid cross-contamination of CPU samples)
   // Each gateway gets its own experiment start time with the configured workload duration
-  baselineMetrics.markExperimentStart(durationSec);
+  const failures = { baseline: [], predictive: [] };
+  baselineMetrics.markExperimentStart(durationSec, runId);
   const baselineSnap = await runGateway(baselineGateway, 'baseline');
 
-  predictiveMetrics.markExperimentStart(durationSec);
+  predictiveMetrics.markExperimentStart(durationSec, runId);
   const predictiveSnap = await runGateway(predictiveGateway, 'predictive');
 
   // Compute savings
@@ -114,7 +116,14 @@ app.post('/api/compare/run', async (req, res) => {
   const predictiveThroughput = predictiveSnap.experimentThroughput || {};
 
   res.json({
-    runId: `cmp-${Date.now()}`,
+    runId,
+    telemetryVersion: 1,
+    slaTargetMs: config.sla.targetLatencyMs,
+    failures,
+    validation: {
+      sameRun: baselineSnap.experiment.runId === runId && predictiveSnap.experiment.runId === runId,
+      reconciled: [baselineSnap, predictiveSnap].every(s => s.incoming === requests.length && s.inFlight === 0 && s.incoming === s.processed + s.rejected),
+    },
     profile,
     durationSec,
     seed,

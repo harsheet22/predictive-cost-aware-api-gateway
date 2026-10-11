@@ -40,6 +40,13 @@ class MetricsStore {
     this.delayed = 0;
     this.downgraded = 0;
     this.decisionReasons = {};
+    // Read-only pipeline telemetry. First policy result per request, not retries
+    // or final gateway classifications (which may include gate failures).
+    this.decisionEngine = { reached: 0, outcomes: { ALLOW: 0, DOWNGRADE: 0, DELAY: 0, REJECT: 0 }, reasons: {} };
+    this.execution = { failures: 0, fullQualityCompleted: 0, reducedQualityCompleted: 0, cachedCompleted: 0 };
+    this.prePredictionRateRejections = 0;
+    this.postDecisionFinalized = 0;
+    this.postDecisionRejected = 0;
 
     // cache
     this.cacheHits = 0;
@@ -94,6 +101,10 @@ class MetricsStore {
     this.cpuPercent = 0;
     this.rssBytes = process.memoryUsage().rss;
     this._recent = [];
+    this._recentCompleted = [];
+    this.completedRps = 0;
+    this._experimentLatencyValues = [];
+    this._experimentRunId = null;
 
     // Experiment throughput (calculated at experiment end, not sliding window)
     this._experimentStartTime = null;
@@ -122,10 +133,12 @@ class MetricsStore {
   }
 
   /** Mark the start of an experiment run. */
-  markExperimentStart(durationSec) {
+  markExperimentStart(durationSec, runId = null) {
     this._experimentStartTime = Date.now();
     this._experimentEndTime = null;
     this._experimentDurationSec = durationSec;
+    this._experimentRunId = runId;
+    this._experimentLatencyValues = [];
     this._sampleCost();
   }
 
@@ -146,6 +159,12 @@ class MetricsStore {
   }
 
   recordCacheHit() { this.cacheHits++; }
+  recordInitialDecision(decision) {
+    this.decisionEngine.reached++;
+    this.decisionEngine.outcomes[decision.decision]++;
+    const key = `${decision.decision}:${decision.reason}`;
+    this.decisionEngine.reasons[key] = (this.decisionEngine.reasons[key] || 0) + 1;
+  }
   recordPredictionGate(event) {
     const g = this.predictionGate;
     g.queueDepth = event.queued; g.queuePeak = event.peakQueued; g.queueOccupancy = event.occupancy;
@@ -211,6 +230,16 @@ class MetricsStore {
     if (o.status === 503) this.shed++;
     if (o.status >= 500 && o.status !== 503) this.errors++;
     if (o.slaMet) this.slaMet++;
+    if (o.reason === 'rate_limited') this.prePredictionRateRejections++;
+    if (o.decisionEngineReached) this.postDecisionFinalized++;
+    if (o.decisionEngineReached && o.decision === 'REJECT') this.postDecisionRejected++;
+    if (o.reason === 'execution_error') this.execution.failures++;
+    if (o.status === 200) {
+      this._recentCompleted.push(Date.now());
+      if (o.precision === 'reduced') this.execution.reducedQualityCompleted++;
+      else this.execution.fullQualityCompleted++;
+      if (o.cached) this.execution.cachedCompleted++;
+    }
     if (o.reason) {
       const key = `${o.decision}:${o.reason}`;
       this.decisionReasons[key] = (this.decisionReasons[key] || 0) + 1;
@@ -222,6 +251,9 @@ class MetricsStore {
 
     // latency histogram (only for responses, i.e. everything)
     this.latencyCount++;
+    // Exact percentiles for a bounded experiment only. Legacy histogram fields
+    // remain available; missing/truncated exact telemetry is explicitly null.
+    if (this._experimentStartTime != null && this._experimentEndTime == null && this._experimentLatencyValues.length < 100000) this._experimentLatencyValues.push(o.latencyMs);
     this.latencySum += o.latencyMs;
     if (o.latencyMs > this.latencyMax) this.latencyMax = o.latencyMs;
     let index = BUCKETS.findIndex((edge) => o.latencyMs <= edge);
@@ -263,9 +295,11 @@ class MetricsStore {
     if (this._experimentStartTime != null && this._experimentEndTime == null) this._sampleCost();
     const cutoff = now - WINDOW_MS;
     while (this._recent.length && this._recent[0] < cutoff) this._recent.shift();
+    while (this._recentCompleted.length && this._recentCompleted[0] < cutoff) this._recentCompleted.shift();
     const uptimeSec = Math.max((now - this.startedAt) / 1000, 0.001);
     const windowSec = Math.min(WINDOW_MS / 1000, uptimeSec);
     this.rps = Number((this._recent.length / windowSec).toFixed(1));
+    this.completedRps = Number((this._recentCompleted.length / windowSec).toFixed(1));
 
     const cpuNow = process.hrtime.bigint();
     const usage = process.cpuUsage(this._lastCpu);
@@ -306,6 +340,12 @@ class MetricsStore {
 
   snapshot() {
     const totalRequests = this.cacheHits + this.cacheMisses;
+    const elapsedSec = this._experimentEndTime != null && this._experimentStartTime != null
+      ? (this._experimentEndTime - this._experimentStartTime) / 1000 : null;
+    const rate = count => elapsedSec > 0 ? count / elapsedSec : null;
+    const values = this._experimentLatencyValues.length === this.latencyCount && this._experimentStartTime != null
+      ? [...this._experimentLatencyValues].sort((a, b) => a - b) : null;
+    const percentile = fraction => values?.length ? values[Math.ceil(values.length * fraction) - 1] : null;
     return {
       name: this.name,
       uptimeMs: Date.now() - this.startedAt,
@@ -325,12 +365,32 @@ class MetricsStore {
       slaMet: this.slaMet,
       inFlight: this.inFlight,
       rps: this.rps,
+      completedRps: this.completedRps,
+      decisionEngine: {
+        reached: this.decisionEngine.reached,
+        outcomes: { ...this.decisionEngine.outcomes },
+        reasons: Object.entries(this.decisionEngine.reasons).map(([key, count]) => {
+          const separator = key.indexOf(':');
+          return { decision: key.slice(0, separator), reason: key.slice(separator + 1), count };
+        }),
+        semantics: 'First cost-policy outcome per request after a usable prediction; reevaluations excluded',
+      },
+      execution: { ...this.execution, completed: this.processed },
+      pipeline: { prePredictionRateRejections: this.prePredictionRateRejections, postDecisionFinalized: this.postDecisionFinalized, postDecisionRejected: this.postDecisionRejected },
       // Experiment throughput (calculated at experiment end)
       experimentThroughput: this.experimentThroughput,
       experiment: {
         startedAt: this._experimentStartTime,
         endedAt: this._experimentEndTime,
         durationSec: this._experimentDurationSec,
+        runId: this._experimentRunId,
+        elapsedSec,
+      },
+      completedThroughput: {
+        elapsedSec, denominator: 'gateway phase start through final response and drain',
+        completedPerSec: rate(this.processed),
+        gateAdmittedPerSec: rate(this.predictionGate.admissions),
+        completionFraction: this.incoming ? this.processed / this.incoming : null,
       },
       costHistory: this.costHistory.map(sample => ({ ...sample })),
       cache: {
@@ -346,6 +406,9 @@ class MetricsStore {
         p95: this._percentile(0.95),
         p99: this._percentile(0.99),
         max: Math.round(this.latencyMax),
+        exact: values ? { count: values.length, avg: values.length ? this.latencySum / this.latencyCount : null,
+          p50: percentile(.5), p95: percentile(.95), p99: percentile(.99),
+          method: 'nearest rank', scope: 'all terminal gateway responses including rejections' } : null,
       },
       utilization: {
         cpuPct: this.cpuPercent,
@@ -367,6 +430,7 @@ class MetricsStore {
       prediction: this._predictionStats(),
       predictionGate: {
         ...this.predictionGate,
+        immediateRejections: this.predictionGate.rejections - this.predictionGate.expirations,
         rejectionReasons: { ...this.predictionGate.rejectionReasons },
         avgEstimatedWaitMs: this.predictionGate.submissions ? this.predictionGate.estimatedWaitSum / this.predictionGate.submissions : 0,
         avgActualWaitMs: this.predictionGate.actualWaitCount ? this.predictionGate.actualWaitSum / this.predictionGate.actualWaitCount : 0,
@@ -375,6 +439,9 @@ class MetricsStore {
       // ML prediction metrics
       ml: {
         predictionCount: this.mlPredictionCount,
+        startedCount: this.predictionGate.attempts,
+        completedCount: this.mlPredictionCount,
+        failureCount: this.mlPredictionErrors - this.mlFallbackCount,
         successCount: this.mlSuccessCount,
         errorCount: this.mlPredictionErrors,
         fallbackCount: this.mlFallbackCount,

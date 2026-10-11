@@ -11,6 +11,7 @@ class PredictionQueue {
     this.maxWaiting = options.maxWaiting ?? 4;
     this.normalWaitMs = options.normalWaitMs ?? 50;
     this.highWaitMs = options.highWaitMs ?? 100;
+    this.rejectOnEstimate = options.rejectOnEstimate ?? true;
     if (!Number.isInteger(this.maxWaiting) || this.maxWaiting < 0 || !Number.isFinite(this.normalWaitMs) || this.normalWaitMs < 0 || !Number.isFinite(this.highWaitMs) || this.highWaitMs < this.normalWaitMs) throw new RangeError('invalid prediction admission limits');
     this.now = options.now || (() => performance.now());
     this.onEvent = options.onEvent || (() => {});
@@ -28,8 +29,23 @@ class PredictionQueue {
     const base = sorted.length < 10 ? 100 : Math.max(20, sorted[Math.ceil(sorted.length * .9) - 1]);
     const oldestActiveAgeMs = Math.max(0, ...Array.from(this.active, entry => now - entry.startedAt));
     const serviceEstimateMs = Math.max(base, oldestActiveAgeMs);
-    return { serviceEstimateMs, oldestActiveAgeMs, serviceEstimateSampleCount: sorted.length,
-      estimatedWaitMs: Math.max(0, Math.ceil((this.running + this.queue.length + 1) / this.maxConcurrency) - 1) * serviceEstimateMs };
+    // Predict each slot's remaining work, rather than charging a full wave.
+    // Overdue calls retain the existing conservative age floor: they must not
+    // look ready merely because their elapsed time exceeded the service estimate.
+    const slotAvailableMs = Array.from(this.active, entry => {
+      const age = Math.max(0, now - entry.startedAt);
+      return age >= base ? serviceEstimateMs : base - age;
+    });
+    while (slotAvailableMs.length < this.maxConcurrency) slotAvailableMs.push(0);
+    const activeResidualMs = slotAvailableMs.slice();
+    // Assign already-waiting work to the next free slot in FIFO order.
+    for (const entry of this.queue) {
+      const earliest = slotAvailableMs.indexOf(Math.min(...slotAvailableMs));
+      slotAvailableMs[earliest] += serviceEstimateMs;
+    }
+    return { serviceEstimateMs, baseServiceEstimateMs: base, oldestActiveAgeMs,
+      serviceEstimateSampleCount: sorted.length, activeResidualMs,
+      estimatedWaitMs: Math.min(...slotAvailableMs) };
   }
   _event(kind, detail = {}) { this.onEvent({ kind, ...detail, ...this.stats() }); }
   run(task, { priority = 'normal', requestId } = {}) {
@@ -38,7 +54,7 @@ class PredictionQueue {
     const waitLimitMs = priority === 'high' ? this.highWaitMs : this.normalWaitMs;
     const mustWait = this.running >= this.maxConcurrency || this.queue.length > 0;
     const reason = mustWait && this.queue.length >= this.maxWaiting ? 'prediction_queue_full'
-      : estimate.estimatedWaitMs > waitLimitMs ? 'prediction_wait_limit' : null;
+      : this.rejectOnEstimate && estimate.estimatedWaitMs > waitLimitMs ? 'prediction_wait_limit' : null;
     const detail = { requestId, priority, waitLimitMs, ...estimate };
     if (reason) {
       this._event('rejection', { ...detail, reason });

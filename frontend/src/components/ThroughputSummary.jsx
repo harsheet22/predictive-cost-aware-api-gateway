@@ -1,15 +1,9 @@
-import React from 'react';
-
-export function ThroughputSummary({ throughput, completed = true }) {
-  const { baseline, predictive } = throughput || {};
+import { format } from '../telemetry';
+export function ThroughputSummary({ throughput }) {
+  const { baseline, predictive } = throughput;
   return <div className="throughput-summary">
-    <div className="throughput-values">
-      <div><span><i className="legend-dot baseline-dot" />Baseline</span><strong>{completed ? baseline?.processedPerSec?.toFixed(1) || '0.0' : '—'} <small>req/s</small></strong></div>
-      <div><span><i className="legend-dot predictive-dot" />Predictive</span><strong>{completed ? predictive?.processedPerSec?.toFixed(1) || '0.0' : '—'} <small>req/s</small></strong></div>
-    </div>
-    {!completed && <p className="section-note">Completed throughput is available when both phases finish.</p>}
-    <details className="throughput-details"><summary>Per-gateway throughput breakdown</summary><div className="table-scroll"><table><thead><tr><th>req/s</th><th>Baseline</th><th>Predictive</th></tr></thead><tbody>
-      {['incoming', 'processed', 'rejected', 'delayed', 'downgraded'].map(key => <tr key={key}><td>{key}</td><td>{completed ? baseline?.[`${key}PerSec`]?.toFixed(1) || '0.0' : '—'}</td><td>{completed ? predictive?.[`${key}PerSec`]?.toFixed(1) || '0.0' : '—'}</td></tr>)}
-    </tbody></table></div></details>
+    <div className="throughput-values">{[['Baseline', baseline, 'baseline'], ['Predictive', predictive, 'predictive']].map(([name, rates, variant]) => <div key={name}><span><i className={`legend-dot ${variant}-dot`} />{name}</span><strong>{format(rates.completedPerSec, 1)} <small>req/s</small></strong><p className="section-note">Phase elapsed: {format(rates.elapsedSec, 3)} s</p></div>)}</div>
+    <p className="section-note">Final completion / incoming: baseline {format(baseline.completionPercent, 1)}% · predictive {format(predictive.completionPercent, 1)}%.</p>
+    <p className="section-note">Actual phase elapsed runs from gateway phase start through final response and drain. It includes workload replay and queue/budget waiting.</p>
   </div>;
 }

@@ -60,7 +60,15 @@ def load_model() -> tuple[Optional[BaseEstimator], Dict[str, Any]]:
 
 def get_model_info() -> Dict[str, Any]:
     """Get model metadata for /model/info endpoint."""
-    _, meta = load_model()
+    # Dashboard polls this endpoint every five seconds. Metadata does not
+    # require deserializing all fitted trees or blocking active predictions.
+    meta = {}
+    if MODEL_PATH.exists() and META_PATH.exists():
+        try:
+            with open(META_PATH) as f:
+                meta = json.load(f)
+        except (OSError, ValueError):
+            pass
     if not meta:
         return {
             "modelVersion": "heuristic-v1",

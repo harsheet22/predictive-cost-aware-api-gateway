@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { api } from '../api/client';
+import { costComparison, format } from '../telemetry';
 
 const PROFILES = [
   { id: 'light', label: 'Light', desc: '8 req/s, mostly DB queries' },
@@ -15,7 +16,7 @@ const PROFILES = [
 /**
  * SimulatorControls - configure and run comparison experiments
  */
-export function SimulatorControls({ onRun, running, lastResult }) {
+export function SimulatorControls({ onRun, onReset, running, lastResult }) {
   const [profile, setProfile] = useState('demo');
   const [duration, setDuration] = useState(5);
   const [seed, setSeed] = useState(42);
@@ -30,9 +31,11 @@ export function SimulatorControls({ onRun, running, lastResult }) {
     }
   };
 
-  const handleReset = () => {
-    api.metricsReset().catch(console.error);
+  const handleReset = async () => {
+    try { await api.metricsReset(); onReset?.(); }
+    catch (e) { setError(e.message); }
   };
+  const costReport = costComparison(lastResult);
 
   return (
     <div className="simulator-controls">
@@ -96,9 +99,9 @@ export function SimulatorControls({ onRun, running, lastResult }) {
         <div className="last-run-summary">
           <h4>Last Run: {lastResult.profile} ({lastResult.durationSec}s, seed {lastResult.seed})</h4>
           <div className="last-run-facts">
-            <span>Baseline processed <strong>{lastResult.baseline?.processed || 0}</strong></span>
-            <span>Cost savings <strong>{(lastResult.savings?.percent || 0).toFixed(1)}%</strong></span>
-            <span>SLA delta <strong>{lastResult.savings?.slaMetDelta || 0}</strong></span>
+            <span>Baseline completed <strong>{format(lastResult.baseline?.processed)}</strong></span>
+            <span>{costReport.label} <strong>{format(costReport.percent == null ? null : Math.abs(costReport.percent), 1)}%</strong></span>
+            <span>Run <strong>{lastResult.runId ?? 'Unavailable'}</strong></span>
           </div>
         </div>
       )}

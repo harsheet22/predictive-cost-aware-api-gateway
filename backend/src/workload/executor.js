@@ -42,7 +42,9 @@ async function execute(request, overrides = {}) {
   const wallStart = process.hrtime.bigint();
   const cpuStart = process.cpuUsage();
 
-  await jobs.burnCpu(iterations, seed);
+  const cpuWork = overrides.hashPrefixCache
+    ? await overrides.hashPrefixCache.run(iterations, seed)
+    : { digest: await jobs.burnCpu(iterations, seed), computed: iterations, reused: 0 };
   await jobs.wait(ioMs);
 
   const cpuUsage = process.cpuUsage(cpuStart);
@@ -58,6 +60,8 @@ async function execute(request, overrides = {}) {
     ok: true,
     precision,
     iterations,
+    cpuIterationsExecuted: cpuWork.computed,
+    cpuIterationsReused: cpuWork.reused,
     ioMs: Number(ioMs.toFixed(2)),
     cpuMs: Number(cpuMs.toFixed(3)),
     wallMs: Number(wallMs.toFixed(3)),

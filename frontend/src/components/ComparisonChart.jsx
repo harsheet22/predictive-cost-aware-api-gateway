@@ -1,4 +1,5 @@
 import React from 'react';
+import { number } from '../telemetry';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer, Cell
@@ -47,12 +48,12 @@ export function ComparisonChart({
 /**
  * LatencyPercentileChart - specialized for p50/p90/p95/p99
  */
-export function LatencyPercentileChart({ baseline, predictive, showTitle = true }) {
+export function LatencyPercentileChart({ baseline, predictive, showTitle = true, height = 280 }) {
   const data = [
-    { name: 'p50', baseline: baseline?.p50 || 0, predictive: predictive?.p50 || 0 },
-    { name: 'p90', baseline: baseline?.p90 || 0, predictive: predictive?.p90 || 0 },
-    { name: 'p95', baseline: baseline?.p95 || 0, predictive: predictive?.p95 || 0 },
-    { name: 'p99', baseline: baseline?.p99 || 0, predictive: predictive?.p99 || 0 },
+    { name: 'Mean', baseline: number(baseline?.avg), predictive: number(predictive?.avg) },
+    { name: 'p50', baseline: number(baseline?.p50), predictive: number(predictive?.p50) },
+    { name: 'p95', baseline: number(baseline?.p95), predictive: number(predictive?.p95) },
+    { name: 'p99', baseline: number(baseline?.p99), predictive: number(predictive?.p99) },
   ];
 
   return (
@@ -61,6 +62,7 @@ export function LatencyPercentileChart({ baseline, predictive, showTitle = true 
       keys={['baseline', 'predictive']}
       labels={{ baseline: 'Baseline', predictive: 'Predictive' }}
       title={showTitle ? 'Latency Percentiles' : undefined}
+      height={height}
       unit=" ms"
     />
   );
@@ -71,7 +73,7 @@ export function LatencyPercentileChart({ baseline, predictive, showTitle = true 
  */
 export function ThroughputChart({ baseline, predictive, showTitle = true }) {
   const data = [
-    { name: 'Processed', baseline: baseline?.processedPerSec || 0, predictive: predictive?.processedPerSec || 0 },
+    { name: 'Completed', baseline: number(baseline?.completedPerSec), predictive: number(predictive?.completedPerSec) },
   ];
 
   return (
@@ -79,8 +81,8 @@ export function ThroughputChart({ baseline, predictive, showTitle = true }) {
       data={data}
       keys={['baseline', 'predictive']}
       labels={{ baseline: 'Baseline', predictive: 'Predictive' }}
-      title={showTitle ? 'Experiment Throughput (req/s, configured duration)' : undefined}
-      unit=""
+      title={showTitle ? 'Completed Throughput (req/s, actual phase elapsed time)' : undefined}
+      unit=" req/s"
       height={125}
     />
   );

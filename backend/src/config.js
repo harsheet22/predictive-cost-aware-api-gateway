@@ -70,9 +70,16 @@ const config = {
     // RF n_jobs=1. FastAPI retains its independent four-worker upper bound.
     mlConcurrency: Number(process.env.ML_CONCURRENCY || 2),
     predictionAdmission: {
-      maxWaiting: Number(process.env.PREDICTION_MAX_WAITING ?? 4),
-      normalWaitMs: Number(process.env.PREDICTION_NORMAL_WAIT_MS ?? 50),
-      highWaitMs: Number(process.env.PREDICTION_HIGH_WAIT_MS ?? 100),
+      // Completion-first: bounded burst absorption, not a 250 ms SLA cutoff.
+      maxWaiting: Number(process.env.PREDICTION_MAX_WAITING ?? 4096),
+      normalWaitMs: Number(process.env.PREDICTION_NORMAL_WAIT_MS ?? 120000),
+      highWaitMs: Number(process.env.PREDICTION_HIGH_WAIT_MS ?? 120000),
+      rejectOnEstimate: process.env.PREDICTION_REJECT_ON_ESTIMATE === 'true',
+    },
+    optimization: {
+      hashPrefixReuse: process.env.HASH_PREFIX_REUSE !== 'false',
+      reducedQualityTypes: (process.env.LOW_PRIORITY_REDUCED_TYPES ?? 'image_resize,report_generate,ml_inference').split(',')
+        .filter(type => ['image_resize', 'report_generate', 'ml_inference'].includes(type)),
     },
 
     budget: {
@@ -99,7 +106,8 @@ const config = {
     },
 
     rateLimit: {
-      enabled: true,
+      // Queue/concurrency caps protect capacity. Optional fast rate rejection.
+      enabled: process.env.PREDICTIVE_RATE_LIMIT_ENABLED === 'true',
       capacity: 300,
       refillPerSec: 150,
     },

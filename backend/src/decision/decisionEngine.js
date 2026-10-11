@@ -63,6 +63,12 @@ class DecisionEngine {
    */
   async decide(request, systemState) {
     const prediction = await this.predictor.predict(request);
+    return this.decidePrediction(request, systemState, prediction);
+  }
+
+  // Budget/execution state may change while waiting; the request features and
+  // its already successful model prediction have not changed.
+  decidePrediction(request, systemState, prediction) {
     const predictedMs = prediction.predictedCostMs;
     const predictedUsd = prediction.predictedCloudCostUsd;
     const budgetRemaining = this.budget.remainingUsd();
@@ -82,6 +88,15 @@ class DecisionEngine {
     const isCheap = predictedUsd <= budgetRemaining * cheapShare;
     const isExpensive = !isCheap;
     const budgetAllows = budgetRemaining > predictedUsd;
+
+    // Explicit quality permission: correctness-sensitive types never enter here.
+    if (request.priority === 'low' && this.downgradeEnabled && this._canDowngrade(request) &&
+        config.predictive.optimization.reducedQualityTypes.includes(request.type)) {
+      const reducedUsd = this._predictCost(predictedMs * config.predictive.downgrade.cpuFactor, request.payloadSize);
+      if (budgetRemaining > reducedUsd && concurrencyOk) {
+        return this._make('DOWNGRADE', 'low_priority_reduced_quality', prediction, budgetRemaining, { downgradeTo: 'reduced' });
+      }
+    }
 
     // 1. CHEAP requests: ALLOW if budget permits and we have concurrency headroom
     // Never delay cheap requests due to queue pressure - that's the point of cost-awareness
@@ -139,7 +154,8 @@ class DecisionEngine {
   }
 
   _canDowngrade(request) {
-    return request.precision !== 'reduced';
+    return request.precision !== 'reduced' && request.priority === 'low' &&
+      config.predictive.optimization.reducedQualityTypes.includes(request.type);
   }
 
   _predictCost(ms, payloadSize) {
