@@ -1,8 +1,8 @@
 /**
  * API client for backend and ML service
  */
-const BACKEND_URL = 'http://localhost:3000';
-const ML_URL = 'http://localhost:8000';
+const BACKEND_URL = import.meta.env.DEV ? 'http://localhost:3000' : '';
+const ML_URL = import.meta.env.DEV ? 'http://localhost:8000' : '/ml';
 
 async function fetchJson(url, options = {}) {
   const res = await fetch(url, {
