@@ -15,6 +15,9 @@ const { generateRequests, replay } = require('./simulator/simulator');
 const healthRouter = require('./routes/health');
 const metricsRouter = require('./routes/metrics');
 const executeRouter = require('./routes/execute');
+const { ExternalSessions } = require('../benchmarks/external/sessions.cjs');
+const externalSessions = new ExternalSessions();
+let internalComparisonRunning = false;
 
 const baselineMetrics = new MetricsStore('baseline');
 const baselineGateway = new BaselineGateway(baselineMetrics);
@@ -28,6 +31,8 @@ const gateways = {
 };
 
 const app = express();
+// External evidence can contain per-request observations and socket diagnostics.
+app.use('/api/external/runs', express.json({ limit: '16mb' }));
 app.use(express.json({ limit: '2mb' }));
 
 // Permissive CORS so the React dashboard (different port) can poll directly.
@@ -56,6 +61,10 @@ app.get('/', (req, res) => {
 app.use('/api/health', healthRouter());
 app.use('/api/metrics', metricsRouter({ gateways }));
 app.use('/api/execute', executeRouter({ gateways }));
+app.use('/api/external/runs', (req, res, next) => {
+  if (req.method === 'POST' && internalComparisonRunning) return res.status(409).json({ error: 'Wait for the built-in comparison to finish.' });
+  next();
+}, require('./routes/external')(externalSessions));
 
 /**
  * POST /api/compare/run
@@ -69,6 +78,9 @@ app.use('/api/execute', executeRouter({ gateways }));
  * }
  */
 app.post('/api/compare/run', async (req, res) => {
+  if (externalSessions.busy() || internalComparisonRunning) return res.status(409).json({ error: 'A comparison is active; wait for it to finish.' });
+  internalComparisonRunning = true;
+  try {
   const { profile = 'normal', durationSec = 10, seed = 42 } = req.body || {};
 
   // Generate the identical request stream for both runs
@@ -177,6 +189,7 @@ app.post('/api/compare/run', async (req, res) => {
       },
     },
   });
+  } finally { internalComparisonRunning = false; }
 });
 
 /** GET /api/compare/stream/:profile/:seed - return the generated request stream for inspection */

@@ -3,6 +3,7 @@ import { LatencyPercentileChart } from './ComparisonChart';
 import { CostChart, CostSummaryCards, PredictionAccuracyChart } from './CostChart';
 import { DecisionBreakdown } from './DecisionBreakdown';
 import { ThroughputSummary } from './ThroughputSummary';
+import { ExternalEvidence } from './ExternalEvidence';
 import { selectExperiment, phaseRates, costComparison, costSamples, gateReason, reconciliationIssues, format } from '../telemetry';
 
 export function ExperimentResults({ comparison, running = false }) {
@@ -16,7 +17,7 @@ export function ExperimentResults({ comparison, running = false }) {
   return <>
     <section className="summary-section" aria-label="Experiment Summary">
       <div className="section-heading"><h2>Experiment Summary</h2><span>{run.profile} · seed {run.seed} · {format(run.durationSec)}s configured workload</span></div>
-      <p className="section-note">Completed experiment {run.runId ?? 'ID unavailable'} — every result below uses this response snapshot.</p>
+      <p className="section-note">{run.source === 'external' ? 'External comparison' : 'Completed experiment'} {run.runId ?? 'ID unavailable'} — every result below uses this response snapshot.</p>
       {issues.length ? <div className="control-error" role="alert">Telemetry discrepancies: {issues.join(' ')}</div> : null}
       <div className="metrics-row">
         <MetricCard label="Total incoming requests" value={format(p?.incoming)} description={`Baseline: ${format(b?.incoming)} · generated workload: ${format(run.totalRequests)}`} />
@@ -25,6 +26,7 @@ export function ExperimentResults({ comparison, running = false }) {
         <MetricCard label={`Gateway SLA ≤${format(run.slaTargetMs)} ms`} value={countPair(p?.slaMet, p?.processed)} description="Denominator: predictive requests completed successfully" />
       </div>
     </section>
+    <ExternalEvidence run={run} />
     <div className="comparison-grid">
       <section className="card cost-section"><SectionHeading number="01" title="Cost Comparison" note="Illustrative execution estimates · no AWS billing integration" /><CostSummaryCards baseline={b} predictive={p} report={costs} /></section>
       <section className="card throughput-section"><SectionHeading number="02" title="Experiment Throughput" note="Successful completions / actual phase elapsed time" /><ThroughputSummary throughput={throughput} /></section>

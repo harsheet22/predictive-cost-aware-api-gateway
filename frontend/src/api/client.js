@@ -24,6 +24,9 @@ export const api = {
   execute: (body) => fetchJson(`${BACKEND_URL}/api/execute`, { method: 'POST', body: JSON.stringify(body) }),
   compareRun: (body) => fetchJson(`${BACKEND_URL}/api/compare/run`, { method: 'POST', body: JSON.stringify(body) }),
   compareStream: (profile, seed) => fetchJson(`${BACKEND_URL}/api/compare/stream/${profile}/${seed}`),
+  externalLatest: () => fetchJson(`${BACKEND_URL}/api/external/runs/latest`),
+  externalHistory: () => fetchJson(`${BACKEND_URL}/api/external/runs/history`),
+  externalReport: id => fetchJson(`${BACKEND_URL}/api/external/runs/${encodeURIComponent(id)}/report`),
 
   // ML Service
   mlHealth: () => fetchJson(`${ML_URL}/health`),
